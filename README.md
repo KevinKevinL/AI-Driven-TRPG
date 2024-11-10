@@ -1,16 +1,13 @@
 合约地址0x0eDA099BAfD448EE0195e4F8C520CA61ba4CA67a
 ### 公链选择
 
-优先考虑最低成本: 选择 Polygon PoS 
-适合高频小额交易 
-用户基础大 
+直接在filecoin上部署。
+
+（感觉非常慢，不知道是不是测试网的问题）
 
 ### 存储选择
 
-web3.storage, pinata, NFT.storage都有内容审查。
-
-开发阶段可以先用web3.storage开发。各功能差不多后自建IPFS节点，用自己的服务器。
-我目前是用的自己的IPFS节点。
+我现在用的pinata。最后要直接用filecoin支付部署在ipfs上。
 
 ### 配置 MetaMask 以连接到Polygon zkEVM Cardona测试网络
 
@@ -34,6 +31,32 @@ RPC URL: https://rpc.cardona.zkevm-rpc.com
 水龙头：
 
 https://faucet.polygon.technology/
+
+
+
+### 配置 MetaMask 以连接到Filecoin - Calibration testnet
+
+Filecoin - Calibration testnet
+
+https://api.calibration.node.glif.io/rpc/v1
+
+314159
+
+tFIL
+
+https://calibration.filfox.info
+
+水龙头：https://beryx.io/faucet
+
+
+
+要做的优化：
+
+1.目前铸造需要两次交易。合约要改成一次组合交易
+
+2.前端加入调用合约的nft设置函数。设置供应量和价格等。
+
+
 
 
 # Social NFT 合约实现说明
