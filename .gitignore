@@ -1,0 +1,63 @@
+# Dependencies
+node_modules
+.pnpm-store
+.pnpm-debug.log
+yarn.lock
+pnpm-lock.yaml
+
+# Next.js
+.next
+out
+
+# Build
+artifacts
+cache
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+*.sublime-*
+.vs
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage
+.nyc_output
+test/coverage
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.swp
+*.swo
+*~
+
+# Local files
+*.local
+
+# Cache directories
+.cache
+.temp
+dist
+tsconfig.tsbuildinfo
+
+# Optional
+# Uncomment if you want to ignore these
+# /contracts
+# /pages
+# /utils
+# /styles
+# /constants

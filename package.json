@@ -1,0 +1,44 @@
+{
+  "name": "social-dapp",
+  "version": "1.0.0",
+  "description": "Social NFT DApp",
+  "main": "hardhat.config.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "npx hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@shadcn/ui": "^0.0.4",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.20",
+    "chai": "^4.5.0",
+    "hardhat": "^2.22.15",
+    "hardhat-gas-reporter": "^1.0.8",
+    "next": "^14.0.3",
+    "postcss": "^8.4.47",
+    "solidity-coverage": "^0.8.1",
+    "tailwindcss": "^3.4.14",
+    "ts-node": "^10.9.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "5.0.0",
+    "@pinata/sdk": "^2.1.0",
+    "ethers": "^6.13.4",
+    "lucide-react": "^0.456.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
