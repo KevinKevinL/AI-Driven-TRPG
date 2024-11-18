@@ -1,66 +1,58 @@
-## 使用说明
-### 首先配置 MetaMask 以连接到Filecoin - Calibration testnet
+让我帮您整理成更规范的 Markdown 格式。
+
+# 使用说明
+
+## 配置网络连接
+
+### Filecoin - Calibration testnet 配置
 1. 打开 MetaMask
 2. 点击网络选择器
 3. 点击"添加网络"
-4. 填入下述网络配置信息
+4. 填入下述网络配置信息：
+   - 网络名称: Filecoin - Calibration testnet
+   - RPC URL: https://api.calibration.node.glif.io/rpc/v1
+   - 链 ID: 314159
+   - 货币符号: tFIL
+   - 区块浏览器: https://calibration.filfox.info
 
+### 获取测试币
+前往水龙头领取测试币：https://beryx.io/faucet
 
-网络名称: Filecoin - Calibration testnet
+## 项目部署
 
+### 本地设置
+1. 克隆仓库到本地
+2. 复制 `.env.example` 到 `.env`，填入相关信息
+3. 安装依赖：
+   ```bash
+   npm init -y
+   # 依赖安装可能需要与 GPT 一起调试
+   ```
+4. 运行项目：
+   ```bash
+   npm run dev
+   ```
 
-RPC URL: https://api.calibration.node.glif.io/rpc/v1
+---
 
+## 部署信息
 
-链 ID: 314159
-
-
-货币符号: tFIL
-
-
-区块浏览器: https://calibration.filfox.info
-
-
-### 然后去水龙头领测试币
-水龙头：https://beryx.io/faucet
-
-
-### 克隆仓库到本地
-然后复制。env.example到.env，填入信息
-
-
-### 类似之前algo那个
-我记得是这样安装依赖 npm init -y
-可能依赖安装有点问题，您得和gpt先生一起调一下
-最后运行 npm run dev
-
-
-||||||||||||||||||||||||||||||||||||||||||||||||||||我是分割线||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-合约地址
+### 合约地址
+```
 0x0eDA099BAfD448EE0195e4F8C520CA61ba4CA67a
-
+```
 
 ### 公链选择
-目前这版是直接在filecoin测试网上部署,利用FEVM可用solidity写而不用学rust。（感觉非常慢，不知道是不是测试网的问题）
-之后直接换到Polygon部署合约就行，都是solidity。
+- 当前版本部署在 Filecoin 测试网上（基于 FEVM，支持 Solidity）
+- 后续计划迁移至 Polygon 网络
 
+### 存储方案
+- 当前：Pinata
+- 计划：web3.storage
 
-
-### 存储选择
-我现在用的pinata。之后改用web3.storage
-
-
-
-||||||||||||||||||||||||||||||||||||||||||||||||||||我是分割线||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-要做的优化：
-
-1.目前铸造需要两次交易。合约要改成一次组合交易
-
-2.前端加入调用合约的nft设置函数。设置供应量和价格等。
-
-
+## 待优化项目
+1. 合约优化：将铸造操作合并为单次交易
+2. 前端增强：添加合约 NFT 设置功能（供应量、价格等）
 
 # Social NFT 合约实现说明
 
@@ -98,24 +90,24 @@ mapping(uint256 => uint256) public tokenIdToSeries;     // NFT ID => 所属系�
    要求 当日铸造数量 < 每日限制(10)
    ```
 3. 验证价格和系列状态
-4. 铸造NFT并更新数据:
-   - 生成新tokenId
-   - 铸造NFT给用户
-   - 设置tokenURI
+4. 铸造 NFT 并更新数据：
+   - 生成新 tokenId
+   - 铸造 NFT 给用户
+   - 设置 tokenURI
    - 更新系列供应量
-   - 记录NFT所属系列
+   - 记录 NFT 所属系列
    - 更新用户今日铸造数量
 
 ## 收益分配比例
-- 铸造收益: 创作者70% + 平台30%
-- 交易手续费: 2.5%(platformFee = 25)
+- 铸造收益：创作者 70% + 平台 30%
+- 交易手续费：2.5%（platformFee = 25）
 
 ## 开发注意事项
 
 ### 1. 价格处理
 - 所有价格相关都用 wei 为单位
 - 默认铸造价格 = 0.0001 ETH
-- 系列可以设独立价格，设0则用默认价格
+- 系列可设独立价格，设 0 则用默认价格
 
 ### 2. 日期处理
 ```solidity
@@ -132,20 +124,20 @@ string(abi.encodePacked(baseURI, toString(tokenId)))
 ### 4. 核心检查点
 - 铸造前检查系列状态 `isActive`
 - 所有价格相关操作检查 `msg.value`
-- NFT操作前检查所有权 `ownerOf()`
-- 系列操作检查创作者权限 
+- NFT 操作前检查所有权 `ownerOf()`
+- 系列操作检查创作者权限
 
 ### 5. 测试重点
 - 日切时铸造限制重置
 - 不同价格系统的铸造
 - 收益分配精度
-- NFT交易流程
+- NFT 交易流程
 - 各种异常情况的权限检查
 
-### 6. Gas优化建议
+### 6. Gas 优化建议
 - 建议批量铸造时在前端合并交易
-- URI可以考虑用固定模版+tokenId
-- 价格可以用uint96节省存储
+- URI 可以考虑用固定模版 + tokenId
+- 价格可以用 uint96 节省存储
 - 状态变量尽量打包存储
 
 ## 合约测试覆盖
@@ -163,31 +155,21 @@ describe("测试分类")
    - 交易手续费
 ```
 
-### 常见问题
-1. 为什么不用 safeTransfer?
+## 常见问题
+
+1. 为什么不用 safeTransfer？
    - 已用 ReentrancyGuard 防重入
    - 直接 transfer 省 gas
    
-2. 系列 ID 从1开始?
-   - 是的，0预留，方便检查默认值
+2. 系列 ID 从 1 开始？
+   - 是的，0 预留，方便检查默认值
 
-3. 收益计算为啥用 1000?
-   - 方便算百分比，如70% = 700/1000
-
-差不多就这些，如果还有不明白的随时问我！
+3. 收益计算为啥用 1000？
+   - 方便算百分比，如 70% = 700/1000
 
 ## 附录
-### 配置 MetaMask 以连接到Polygon zkEVM Cardona测试网络
 
-要在 MetaMask 中添加网络：
-
-1. 打开 MetaMask
-2. 点击网络选择器
-3. 点击"添加网络"
-4. 填入上述网络配置信息
-
-以下是 Polygon zkEVM Cardona 测试网的配置信息：
-
+### Polygon zkEVM Cardona 测试网配置
 ```
 网络名称: Polygon zkEVM Cardona Testnet
 RPC URL: https://rpc.cardona.zkevm-rpc.com
@@ -195,23 +177,4 @@ RPC URL: https://rpc.cardona.zkevm-rpc.com
 货币符号: ETH
 区块浏览器: https://testnet-zkevm.polygonscan.com
 ```
-
-水龙头：
-
-https://faucet.polygon.technology/
-
-
-### 配置 MetaMask 以连接到Filecoin - Calibration testnet
-
-Filecoin - Calibration testnet
-
-https://api.calibration.node.glif.io/rpc/v1
-
-314159
-
-tFIL
-
-https://calibration.filfox.info
-
-水龙头：https://beryx.io/faucet
-
+水龙头：https://faucet.polygon.technology/
