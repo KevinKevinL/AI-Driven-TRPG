@@ -7,9 +7,17 @@
 
 
 网络名称: Filecoin - Calibration testnet
+
+
 RPC URL: https://api.calibration.node.glif.io/rpc/v1
+
+
 链 ID: 314159
+
+
 货币符号: tFIL
+
+
 区块浏览器: https://calibration.filfox.info
 
 
@@ -29,15 +37,17 @@ RPC URL: https://api.calibration.node.glif.io/rpc/v1
 
 ||||||||||||||||||||||||||||||||||||||||||||||||||||我是分割线||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-合约地址0x0eDA099BAfD448EE0195e4F8C520CA61ba4CA67a
-### 公链选择
+合约地址
+0x0eDA099BAfD448EE0195e4F8C520CA61ba4CA67a
 
+
+### 公链选择
 目前这版是直接在filecoin测试网上部署,利用FEVM可用solidity写而不用学rust。（感觉非常慢，不知道是不是测试网的问题）
 之后直接换到Polygon部署合约就行，都是solidity。
 
 
-### 存储选择
 
+### 存储选择
 我现在用的pinata。之后改用web3.storage
 
 
@@ -49,7 +59,6 @@ RPC URL: https://api.calibration.node.glif.io/rpc/v1
 1.目前铸造需要两次交易。合约要改成一次组合交易
 
 2.前端加入调用合约的nft设置函数。设置供应量和价格等。
-
 
 
 
