@@ -1,3 +1,34 @@
+## 使用说明
+### 首先配置 MetaMask 以连接到Filecoin - Calibration testnet
+1. 打开 MetaMask
+2. 点击网络选择器
+3. 点击"添加网络"
+4. 填入下述网络配置信息
+Filecoin - Calibration testnet
+
+https://api.calibration.node.glif.io/rpc/v1
+
+314159
+
+tFIL
+
+https://calibration.filfox.info
+
+### 然后去水龙头领测试币
+水龙头：https://beryx.io/faucet
+
+### 克隆仓库到本地
+然后复制。env.example到.env，填入信息
+
+### 类似之前algo那个
+我记得是这样安装依赖 npm init -y
+可能依赖安装有点问题，您得和gpt先生一起调一下
+最后运行 npm run dev
+
+
+
+
+
 合约地址0x0eDA099BAfD448EE0195e4F8C520CA61ba4CA67a
 ### 公链选择
 
