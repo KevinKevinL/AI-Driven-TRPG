@@ -4,15 +4,15 @@
 2. 点击网络选择器
 3. 点击"添加网络"
 4. 填入下述网络配置信息
-Filecoin - Calibration testnet
+网络名称: Filecoin - Calibration testnet
 
-https://api.calibration.node.glif.io/rpc/v1
+RPC URL: https://api.calibration.node.glif.io/rpc/v1
 
-314159
+链 ID: 314159
 
-tFIL
+货币符号: tFIL
 
-https://calibration.filfox.info
+区块浏览器: https://calibration.filfox.info
 
 ### 然后去水龙头领测试币
 水龙头：https://beryx.io/faucet
@@ -27,59 +27,22 @@ https://calibration.filfox.info
 
 
 
-|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+||||||||||||||||||||||||||||||||||||||||||||||||||||我是分割线||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 合约地址0x0eDA099BAfD448EE0195e4F8C520CA61ba4CA67a
 ### 公链选择
 
-直接在filecoin上部署。
+目前这版是直接在filecoin测试网上部署,利用FEVM可用solidity写而不用学rust。（感觉非常慢，不知道是不是测试网的问题）
+之后直接换到Polygon部署合约就行，都是solidity。
 
-（感觉非常慢，不知道是不是测试网的问题）
 
 ### 存储选择
 
-我现在用的pinata。最后要直接用filecoin支付部署在ipfs上。
-
-### 配置 MetaMask 以连接到Polygon zkEVM Cardona测试网络
-
-要在 MetaMask 中添加网络：
-
-1. 打开 MetaMask
-2. 点击网络选择器
-3. 点击"添加网络"
-4. 填入上述网络配置信息
-
-以下是 Polygon zkEVM Cardona 测试网的配置信息：
-
-```
-网络名称: Polygon zkEVM Cardona Testnet
-RPC URL: https://rpc.cardona.zkevm-rpc.com
-链 ID: 2442
-货币符号: ETH
-区块浏览器: https://testnet-zkevm.polygonscan.com
-```
-
-水龙头：
-
-https://faucet.polygon.technology/
+我现在用的pinata。之后改用web3.storage
 
 
 
-### 配置 MetaMask 以连接到Filecoin - Calibration testnet
-
-Filecoin - Calibration testnet
-
-https://api.calibration.node.glif.io/rpc/v1
-
-314159
-
-tFIL
-
-https://calibration.filfox.info
-
-水龙头：https://beryx.io/faucet
-
-
+||||||||||||||||||||||||||||||||||||||||||||||||||||我是分割线||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 要做的优化：
 
@@ -203,3 +166,43 @@ describe("测试分类")
    - 方便算百分比，如70% = 700/1000
 
 差不多就这些，如果还有不明白的随时问我！
+
+## 附录
+### 配置 MetaMask 以连接到Polygon zkEVM Cardona测试网络
+
+要在 MetaMask 中添加网络：
+
+1. 打开 MetaMask
+2. 点击网络选择器
+3. 点击"添加网络"
+4. 填入上述网络配置信息
+
+以下是 Polygon zkEVM Cardona 测试网的配置信息：
+
+```
+网络名称: Polygon zkEVM Cardona Testnet
+RPC URL: https://rpc.cardona.zkevm-rpc.com
+链 ID: 2442
+货币符号: ETH
+区块浏览器: https://testnet-zkevm.polygonscan.com
+```
+
+水龙头：
+
+https://faucet.polygon.technology/
+
+
+### 配置 MetaMask 以连接到Filecoin - Calibration testnet
+
+Filecoin - Calibration testnet
+
+https://api.calibration.node.glif.io/rpc/v1
+
+314159
+
+tFIL
+
+https://calibration.filfox.info
+
+水龙头：https://beryx.io/faucet
+
