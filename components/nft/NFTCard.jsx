@@ -13,10 +13,14 @@ const NFTCard = ({ nft }) => {
 
         let url = nft.tokenURI;
         
-        // 处理 ipfs:// 格式的 URI
+        // 检查URL格式并规范化
         if (url.startsWith('ipfs://')) {
-          // 替换为 Pinata 网关URL
           url = url.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+        }
+        // 如果URL已经是https格式但包含多个gateway引用，进行清理
+        if (url.includes('gateway.pinata.cloud/ipfs/')) {
+          const ipfsHash = url.split('ipfs/').pop(); // 获取IPFS hash
+          url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
         }
 
         console.log('Fetching metadata from:', url);
@@ -24,9 +28,16 @@ const NFTCard = ({ nft }) => {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         
-        // 处理图片 URL（如果图片也是 IPFS 格式）
-        if (data.image && data.image.startsWith('ipfs://')) {
-          data.image = data.image.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+        // 处理图片URL
+        if (data.image) {
+          if (data.image.startsWith('ipfs://')) {
+            data.image = data.image.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+          }
+          // 清理可能重复的gateway引用
+          if (data.image.includes('gateway.pinata.cloud/ipfs/')) {
+            const ipfsHash = data.image.split('ipfs/').pop();
+            data.image = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
+          }
         }
         
         setMetadata(data);
@@ -40,10 +51,11 @@ const NFTCard = ({ nft }) => {
     fetchMetadata();
   }, [nft.tokenURI]);
 
+
   if (error) {
     return (
-      <div className="border rounded-lg p-4 shadow-lg">
-        <p className="text-red-500">Error loading NFT: {error}</p>
+      <div className="border rounded-lg p-4 shadow-lg bg-white">
+        <p className="text-red-500">Error loading character card: {error}</p>
         <p className="text-sm text-gray-500">Token ID: {nft.tokenId?.toString()}</p>
       </div>
     );
@@ -51,20 +63,40 @@ const NFTCard = ({ nft }) => {
 
   if (!metadata) {
     return (
-      <div className="border rounded-lg p-4 shadow-lg">
-        <p className="text-gray-500">Loading NFT metadata...</p>
+      <div className="border rounded-lg p-4 shadow-lg bg-white">
+        <p className="text-gray-500">Loading character card...</p>
       </div>
     );
   }
 
+  // 辅助函数：格式化属性值显示
+  const formatAttributeValue = (value) => {
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+    return value;
+  };
+
   return (
-    <div className="border rounded-lg p-4 shadow-lg">
-      <h3 className="text-xl font-bold mb-2">{metadata.name}</h3>
+    <div className="border rounded-lg p-4 shadow-lg bg-white">
+      {/* 角色基本信息 */}
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-xl font-bold">{metadata.name}</h3>
+          <p className="text-sm text-gray-600">{metadata.attributes.occupation}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm text-gray-600">Age: {metadata.attributes.age}</p>
+          <p className="text-sm text-gray-600">Player: {metadata.attributes.player}</p>
+        </div>
+      </div>
+
+      {/* 角色图片 */}
       {metadata.image && (
-        <div className="relative w-full h-48">
-          <img 
+        <div className="relative w-full h-48 mb-4">
+          <img
             src={metadata.image}
-            alt={metadata.name || 'NFT Image'}
+            alt={metadata.name || 'Character Image'}
             className="w-full h-full object-cover rounded-lg"
             onError={(e) => {
               console.error('Image load error');
@@ -73,9 +105,63 @@ const NFTCard = ({ nft }) => {
           />
         </div>
       )}
-      <p className="text-gray-600 mt-2">{metadata.description}</p>
-      <div className="mt-2">
-        <p className="text-sm"><span className="font-semibold">Token ID:</span> {nft.tokenId?.toString()}</p>
+
+      {/* 角色描述 */}
+      <p className="text-gray-700 mb-4">{metadata.description}</p>
+
+      {/* 属性值 */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        {/* 基础属性 */}
+        <div className="border rounded p-3">
+          <h4 className="font-semibold mb-2">Characteristics</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {metadata.attributes.characteristics && Object.entries(metadata.attributes.characteristics).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span className="text-sm text-gray-600">{key.toUpperCase()}</span>
+                <span className="text-sm font-medium">{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 衍生属性 */}
+        <div className="border rounded p-3">
+          <h4 className="font-semibold mb-2">Derived Stats</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {metadata.attributes.derived && Object.entries(metadata.attributes.derived).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span className="text-sm text-gray-600">{key.toUpperCase()}</span>
+                <span className="text-sm font-medium">{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 状态和技能 */}
+      {metadata.attributes.status && (
+        <div className="border rounded p-3 mb-4">
+          <h4 className="font-semibold mb-2">Status</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(metadata.attributes.status).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span className="text-sm text-gray-600">
+                  {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                </span>
+                <span className={`text-sm font-medium ${value ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatAttributeValue(value)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Token信息 */}
+      <div className="mt-4 pt-4 border-t">
+        <p className="text-xs text-gray-500">
+          Token ID: {nft.tokenId?.toString()}
+        </p>
       </div>
     </div>
   );
