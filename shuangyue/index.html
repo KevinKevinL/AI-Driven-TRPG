@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Dialogue Interface</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="scripts/main.js"></script>
+    <script defer src="scripts/memory.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="ai-dialogue">
+            <div class="chat-box" id="chatBox">
+                <div class="response kp">
+                    <p><strong>KP:</strong> 欢迎来到加纳巴尔的呼唤…</p>
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="输入内容…" onkeydown="handleEnter(event)">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+        <div class="character-card">
+            <h3>当前人物卡</h3>
+        </div>
+        <div class="dice-panel">
+            <h3>骰子面板</h3>
+        </div>
+        <div class="quick-actions">
+            <h3>快捷操作</h3>
+        </div>
+    </div>
+    <div class="bottom-navigation">
+        <div class="nav-item">
+            <i class="fas fa-comments"></i>
+            <span>AI跑团</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>人物卡库</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-address-card"></i>
+            <span>个人归档</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-users"></i>
+            <span>社区</span>
+        </div>
+</div>
+</body>
+</html>
