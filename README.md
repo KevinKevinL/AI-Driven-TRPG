@@ -20,13 +20,13 @@
 
 ### 本地设置
 1. 克隆仓库到本地
-2. 复制 `.env.example` 到 `.env`，填入相关信息
-3. 安装依赖：
+2. 复制 `.env.example` 到 `.env`，填入相关信息(如果你懒得用自己的pinata JWT，pinata.txt文件里有我的
+4. 安装依赖：
    ```bash
-   npm init -y
-   # 依赖安装可能需要与 GPT 一起调试
+   npm install
+   npx hardhat compile
    ```
-4. 运行项目：
+5. 运行项目：
    ```bash
    npm run dev
    ```
