@@ -2,9 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import NFTCard from './nft/NFTCard';
 
-const NFTInterface = ({ contractAddress, contractABI }) => {
+// 添加 Polygon zkEVM Cardona 测试网配置
+const POLYGON_ZKEVM_CONFIG = {
+  chainId: '0x98a', // 2442
+  chainName: 'Polygon zkEVM Cardona Testnet',
+  nativeCurrency: {
+    name: 'Ethereum',
+    symbol: 'ETH',
+    decimals: 18
+  },
+  rpcUrls: ['https://rpc.cardona.zkevm-rpc.com'],
+  blockExplorerUrls: ['https://cardona-zkevm.polygonscan.com']
+};
+
+const NFTInterface = ({ factoryAddress, factoryABI, collectionABI }) => {
   const [account, setAccount] = useState('');
-  const [contract, setContract] = useState(null);
+  const [factoryContract, setFactoryContract] = useState(null);
+  const [collections, setCollections] = useState([]);
+  const [selectedCollection, setSelectedCollection] = useState(null);
   const [ownedNFTs, setOwnedNFTs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -15,38 +30,55 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
   const [uploading, setUploading] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState('');
   const [uploadedIPFSHash, setUploadedIPFSHash] = useState('');
+  
+  const [newCollection, setNewCollection] = useState({
+    name: '',
+    symbol: '',
+    maxSupply: '0',
+    mintPrice: '0.01'
+  });
 
-  const FILECOIN_TESTNET_CONFIG = {
-    chainId: '0x4CB2F',
-    chainName: 'Filecoin - Calibration testnet',
-    nativeCurrency: {
-      name: 'Filecoin',
-      symbol: 'tFIL',
-      decimals: 18
-    },
-    rpcUrls: ['https://api.calibration.node.glif.io/rpc/v1'],
-    blockExplorerUrls: ['https://calibration.filfox.info']
+  // 添加切换网络的函数
+  const switchToPolygonZkEVM = async () => {
+    if (!window.ethereum) return false;
+    
+    try {
+      // 尝试切换到 Polygon zkEVM 网络
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: POLYGON_ZKEVM_CONFIG.chainId }],
+      });
+      return true;
+    } catch (switchError) {
+      // 如果网络不存在，则添加网络
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [POLYGON_ZKEVM_CONFIG],
+          });
+          return true;
+        } catch (addError) {
+          console.error('Failed to add network:', addError);
+          setError('Failed to add Polygon zkEVM network: ' + (addError.message || 'Unknown error'));
+          return false;
+        }
+      } else {
+        console.error('Failed to switch network:', switchError);
+        setError('Failed to switch network: ' + (switchError.message || 'Unknown error'));
+        return false;
+      }
+    }
   };
 
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
       try {
-        console.log('Connecting to wallet...');
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: FILECOIN_TESTNET_CONFIG.chainId }],
-        }).catch(async (switchError) => {
-          console.log('Switch chain error:', switchError);
-          if (switchError.code === 4902) {
-            console.log('Adding Filecoin network...');
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [FILECOIN_TESTNET_CONFIG],
-            });
-          } else {
-            throw switchError;
-          }
-        });
+        // 首先切换到 Polygon zkEVM 网络
+        const networkSwitched = await switchToPolygonZkEVM();
+        if (!networkSwitched) {
+          throw new Error('Please switch to Polygon zkEVM Cardona Testnet');
+        }
 
         const accounts = await window.ethereum.request({ 
           method: 'eth_requestAccounts' 
@@ -56,19 +88,20 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
 
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
-        console.log('Creating contract instance...');
-        const nftContract = new ethers.Contract(
-          contractAddress,
-          contractABI,
+        
+        // 检查当前网络
+        const network = await provider.getNetwork();
+        if (network.chainId.toString() !== parseInt(POLYGON_ZKEVM_CONFIG.chainId, 16).toString()) {
+          throw new Error('Please connect to Polygon zkEVM Cardona Testnet');
+        }
+        
+        const factory = new ethers.Contract(
+          factoryAddress,
+          factoryABI,
           signer
         );
         
-        // 验证合约实例
-        console.log('Verifying contract instance...');
-        const name = await nftContract.name();
-        console.log('Contract name:', name);
-        
-        setContract(nftContract);
+        setFactoryContract(factory);
         setError('');
         return true;
       } catch (err) {
@@ -86,13 +119,9 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
     setUploading(true);
     setTransactionStatus('Uploading to IPFS...');
     try {
-      console.log('Preparing file upload to Pinata...');
-      
-      // 1. 首先上传图片文件
       const imageFormData = new FormData();
       imageFormData.append('file', file);
       
-      console.log('Uploading image to Pinata...');
       const imageResponse = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
         method: 'POST',
         headers: {
@@ -106,23 +135,16 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
       }
       
       const imageData = await imageResponse.json();
+      // 使用 Pinata 网关
       const imageUrl = `https://gateway.pinata.cloud/ipfs/${imageData.IpfsHash}`;
-      console.log('Image uploaded:', imageUrl);
-  
-      // 2. 创建并上传元数据
+      
       const metadata = {
-        name: `SocialNFT #${Date.now()}`,
-        description: "A SocialNFT token",
+        name: `NFT #${Date.now()}`,
+        description: "A Collection NFT token",
         image: imageUrl,
-        attributes: [
-          {
-            trait_type: "Upload Time",
-            value: new Date().toISOString()
-          }
-        ]
+        attributes: []
       };
   
-      console.log('Uploading metadata to Pinata...');
       const metadataResponse = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
         method: 'POST',
         headers: {
@@ -137,234 +159,257 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
       }
   
       const metadataResult = await metadataResponse.json();
-      console.log('Metadata uploaded:', metadataResult);
       setUploadedIPFSHash(metadataResult.IpfsHash);
       
+      // 返回使用 Pinata 网关的完整 URL
       return `https://gateway.pinata.cloud/ipfs/${metadataResult.IpfsHash}`;
     } catch (err) {
-      console.error('Upload error:', err);
       throw new Error('Failed to upload to IPFS: ' + (err.message || 'Unknown error'));
     } finally {
       setUploading(false);
     }
   };
 
+  const createCollection = async () => {
+    if (!factoryContract) {
+      setError('Please connect wallet first');
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      setTransactionStatus('Creating collection...');
+  
+      if (!newCollection.name || !newCollection.symbol) {
+        throw new Error('Name and symbol are required');
+      }
+  
+      const maxSupply = parseInt(newCollection.maxSupply);
+      if (isNaN(maxSupply) || maxSupply < 0) {
+        throw new Error('Invalid max supply value');
+      }
+  
+      const mintPrice = ethers.parseEther(newCollection.mintPrice.toString());
+      
+      // 创建集合时设置baseTokenURI为空，稍后在铸造时使用实际的IPFS hash
+      const baseURI = '';
+  
+      const tx = await factoryContract.createCollection(
+        newCollection.name,
+        newCollection.symbol,
+        maxSupply,
+        baseURI,
+        mintPrice
+      );
+  
+      setTransactionStatus('Transaction submitted. Waiting for confirmation...');
+      await tx.wait();
+  
+      await fetchCollections();
+      setSuccess('Collection created successfully!');
+      setTransactionStatus('');
+  
+      setNewCollection({
+        name: '',
+        symbol: '',
+        maxSupply: '0',
+        mintPrice: '0.01'
+      });
+  
+    } catch (err) {
+      console.error('Creation error:', err);
+      setError('Failed to create collection: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  //mintNFT 部分
   const mintNFT = async () => {
-    if (!contract) {
-      setError('Please connect your wallet first');
+    if (!selectedCollection || !file) {
+      setError(!selectedCollection ? 'Please select a collection first' : 'Please select a file to mint');
       return;
     }
-
-    if (!file) {
-      setError('Please select a file to mint');
-      return;
-    }
-
+  
     try {
       setLoading(true);
       setError('');
-      setSuccess('');
-
-      // 1. Upload file to IPFS
-      setTransactionStatus('Uploading to IPFS...');
-      const ipfsUrl = await uploadToIPFS(file);
-      console.log('IPFS URL:', ipfsUrl);
+  
+      // 1. 上传图片到IPFS
+      setTransactionStatus('Uploading image to IPFS...');
+      const imageFormData = new FormData();
+      imageFormData.append('file', file);
       
-      // 2. Create new NFT series and mint in one transaction
-      setTransactionStatus('Creating NFT series and minting...');
-      console.log('Creating NFT series...');
+      const imageResponse = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
+        },
+        body: imageFormData
+      });
       
-      // 获取铸造价格
-      const mintPrice = await contract.mintPrice();
-      console.log('Mint price:', ethers.formatEther(mintPrice), 'ETH');
-
-      // 创建系列
-      const createSeriesTx = await contract.createNFTSeries(
-        0, // unlimited supply
-        ipfsUrl,
-        0  // use default price
+      if (!imageResponse.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      const imageResult = await imageResponse.json();
+      const imageUrl = `ipfs://${imageResult.IpfsHash}`;
+      
+      // 2. 创建和上传元数据
+      setTransactionStatus('Creating metadata...');
+      const metadata = {
+        name: `NFT #${Date.now()}`,
+        description: "A Collection NFT token",
+        image: imageUrl,
+        attributes: []
+      };
+  
+      const metadataResponse = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
+        },
+        body: JSON.stringify(metadata)
+      });
+  
+      if (!metadataResponse.ok) {
+        throw new Error('Failed to upload metadata');
+      }
+  
+      const metadataResult = await metadataResponse.json();
+      const metadataHash = metadataResult.IpfsHash;
+      console.log('Metadata IPFS Hash:', metadataHash);
+  
+      // 3. 铸造NFT
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const collectionContract = new ethers.Contract(
+        selectedCollection,
+        collectionABI,
+        signer
+      );
+  
+      // 修改baseTokenURI为元数据的IPFS hash
+      setTransactionStatus('Setting token URI...');
+      const baseURISetter = new ethers.Contract(
+        selectedCollection,
+        ['function setBaseURI(string memory _baseURI) public'],
+        signer
       );
       
-      console.log('Create series transaction:', createSeriesTx.hash);
-      setTransactionStatus(`Creating series... Transaction: ${createSeriesTx.hash}`);
-      
-      const receipt = await createSeriesTx.wait();
-      console.log('Series creation receipt:', receipt);
-
-      // 从事件中获取seriesId
-      const seriesCreatedEvent = receipt.logs.find(log => {
-        try {
-          return log.topics[0] === contract.interface.getEvent('NFTSeriesCreated').topicHash;
-        } catch (err) {
-          return false;
-        }
-      });
-
-      if (!seriesCreatedEvent) {
-        throw new Error('Failed to get series ID from event');
-      }
-
-      const parsedEvent = contract.interface.parseLog({
-        topics: seriesCreatedEvent.topics,
-        data: seriesCreatedEvent.data
-      });
-      
-      const seriesId = parsedEvent.args[0];
-      console.log('Series ID:', seriesId.toString());
-      
+      const setURITx = await baseURISetter.setBaseURI(metadataHash);
+      await setURITx.wait();
+  
       // 铸造NFT
       setTransactionStatus('Minting NFT...');
-      console.log('Minting NFT...');
-      const tx = await contract.mintSeriesNFT(seriesId, {
+      const mintPrice = await collectionContract.mintPrice();
+      const tx = await collectionContract.mint({
         value: mintPrice
       });
+  
+      await tx.wait();
       
-      console.log('Mint transaction:', tx.hash);
-      setTransactionStatus(`Minting... Transaction: ${tx.hash}`);
-      
-      const mintReceipt = await tx.wait();
-      console.log('Mint complete!', mintReceipt);
-      
-      setSuccess(`NFT minted successfully! IPFS Hash: ${uploadedIPFSHash}`);
-      
-      // 刷新NFT列表
+      setSuccess('NFT minted successfully!');
       await fetchOwnedNFTs();
       
-      // Clear form
       setFile(null);
       setPreview('');
-      setTransactionStatus('');
+  
     } catch (err) {
       console.error('Mint error:', err);
       setError('Failed to mint NFT: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
+      setTransactionStatus('');
+    }
+  };
+  
+  const fetchCollections = async () => {
+    if (!factoryContract) return;
+
+    try {
+      const collectionAddresses = await factoryContract.getCollections();
+      setCollections(collectionAddresses);
+    } catch (err) {
+      console.error('Fetch collections error:', err);
+      setError('Failed to fetch collections: ' + (err.message || 'Unknown error'));
     }
   };
 
+
+  
+  // 修改 fetchOwnedNFTs 函数中的区块范围
   const fetchOwnedNFTs = async () => {
-    if (!contract || !account) return;
+    if (!selectedCollection || !account) return;
   
     try {
       setLoading(true);
       console.log('Fetching NFTs for account:', account);
       
-      // 获取当前区块号
       const provider = new ethers.BrowserProvider(window.ethereum);
-      const currentBlock = await provider.getBlockNumber();
-      
-      // Filecoin 网络限制查询范围约为16小时，按照30秒一个区块计算
-      // 16小时 = 16 * 60 * 60 秒 = 57600 秒
-      // 57600 秒 / 30 秒 = 1920 个区块
-      const blockRange = 1900; // 留一些余量
-      const fromBlock = Math.max(0, currentBlock - blockRange);
-      
-      console.log('Querying events from block:', fromBlock, 'to:', currentBlock);
-      
-      // 分批次获取事件
-      const batchSize = 500; // 每批次查询的区块数
-      const batches = Math.ceil((currentBlock - fromBlock) / batchSize);
-      let allEvents = [];
-      
-      for (let i = 0; i < batches; i++) {
-        const batchFromBlock = fromBlock + (i * batchSize);
-        const batchToBlock = Math.min(batchFromBlock + batchSize - 1, currentBlock);
-        
-        console.log(`Fetching batch ${i + 1}/${batches}, blocks ${batchFromBlock}-${batchToBlock}`);
-        
-        try {
-          const mintFilter = contract.filters.NFTMinted();
-          const events = await contract.queryFilter(mintFilter, batchFromBlock, batchToBlock);
-          allEvents = allEvents.concat(events);
-        } catch (batchError) {
-          console.warn(`Failed to fetch batch ${i + 1}:`, batchError);
-          continue;
-        }
-      }
-      
-      console.log('Found total events:', allEvents.length);
+      const signer = await provider.getSigner();
+      const collectionContract = new ethers.Contract(
+        selectedCollection,
+        collectionABI,
+        signer
+      );
+  
+      const totalSupply = await collectionContract.totalSupply();
+      console.log('Total Supply:', totalSupply.toString());
   
       const nfts = [];
-      const processed = new Set(); // 用于去重
       
-      // 遍历所有事件
-      for (const event of allEvents) {
+      for (let tokenId = 1; tokenId <= totalSupply; tokenId++) {
         try {
-          const [tokenId, seriesId, minter] = [
-            event.args[0],
-            event.args[1],
-            event.args[2]
-          ];
+          const owner = await collectionContract.ownerOf(tokenId);
           
-          // 避免重复处理
-          const tokenKey = tokenId.toString();
-          if (processed.has(tokenKey)) continue;
-          processed.add(tokenKey);
-          
-          console.log('Processing token:', tokenKey);
-  
-          try {
-            // 检查当前 token 的所有者
-            const currentOwner = await contract.ownerOf(tokenId);
+          if (owner.toLowerCase() === account.toLowerCase()) {
+            console.log('Found owned NFT:', tokenId);
             
-            // 只处理属于当前账户的 NFT
-            if (currentOwner.toLowerCase() === account.toLowerCase()) {
-              console.log('Found owned NFT:', tokenKey);
-  
-              // 获取系列信息
-              const seriesInfo = await contract.getSeriesInfo(seriesId);
-              console.log('Series info for token', tokenKey, ':', seriesInfo);
-  
-              // 获取并解析元数据
-              let metadata = null;
-              try {
-                const response = await fetch(seriesInfo[3]); // baseTokenURI from series info
-                metadata = await response.json();
-                console.log('Metadata for token', tokenKey, ':', metadata);
-              } catch (metadataError) {
-                console.warn('Failed to fetch metadata for token', tokenKey, ':', metadataError);
-              }
-  
-              // 获取市场信息
-              let isListed = false;
-              let price = '0';
-              try {
-                isListed = await contract.isTokenListed(tokenId);
-                if (isListed) {
-                  price = await contract.tokenIdToPrice(tokenId);
-                }
-              } catch (marketError) {
-                console.warn('Failed to fetch market info:', marketError);
-              }
-  
+            // 获取 tokenURI
+            const tokenURI = await collectionContract.tokenURI(tokenId);
+            console.log('Raw Token URI:', tokenURI);
+            
+            // 获取元数据
+            try {
+              // 处理元数据 URL
+              const metadataUrl = tokenURI.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+              console.log('Fetching metadata from:', metadataUrl);
+              
+              const response = await fetch(metadataUrl);
+              if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+              const metadata = await response.json();
+              
               nfts.push({
                 tokenId,
-                seriesId,
-                tokenURI: metadata?.image || seriesInfo[3],
-                name: metadata?.name || `NFT #${tokenKey}`,
-                description: metadata?.description || 'A SocialNFT token',
-                attributes: metadata?.attributes || [],
-                creator: seriesInfo[0],
-                maxSupply: seriesInfo[1].toString(),
-                currentSupply: seriesInfo[2].toString(),
-                isMinter: minter.toLowerCase() === account.toLowerCase(),
-                isListed,
-                price
+                tokenURI: metadataUrl,
+                metadata: metadata,
+                name: metadata.name || `NFT #${tokenId}`,
+                description: metadata.description || 'An NFT token',
+                image: metadata.image
+              });
+            } catch (metadataError) {
+              console.warn('Failed to fetch metadata:', metadataError);
+              // 添加基本信息
+              nfts.push({
+                tokenId,
+                tokenURI,
+                name: `NFT #${tokenId}`,
+                description: 'An NFT token'
               });
             }
-          } catch (ownerError) {
-            console.warn('Failed to check ownership for token', tokenKey, ':', ownerError);
-            continue;
           }
-        } catch (err) {
-          console.warn('Error processing event:', err);
+        } catch (tokenError) {
+          console.warn('Error checking token:', tokenId, tokenError);
           continue;
         }
       }
-  
+      
       console.log('Final NFTs list:', nfts);
       setOwnedNFTs(nfts);
       setError('');
+      
     } catch (err) {
       console.error('Fetch error:', err);
       setError('Failed to fetch NFTs: ' + (err.message || 'Unknown error'));
@@ -382,6 +427,7 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
 
     init();
 
+    // MetaMask事件监听器
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', async (accounts) => {
         if (accounts.length > 0) {
@@ -389,17 +435,18 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
           await connectWallet();
         } else {
           setAccount('');
-          setContract(null);
+          setFactoryContract(null);
         }
       });
 
-      window.ethereum.on('chainChanged', () => {
-        window.location.reload();
-      });
-
-      window.ethereum.on('disconnect', () => {
-        setAccount('');
-        setContract(null);
+      // 添加链切换事件监听
+      window.ethereum.on('chainChanged', async (chainId) => {
+        if (chainId !== POLYGON_ZKEVM_CONFIG.chainId) {
+          setError('Please switch to Polygon zkEVM Cardona Testnet');
+          setFactoryContract(null);
+        } else {
+          await connectWallet();
+        }
       });
     }
 
@@ -407,62 +454,141 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
       if (window.ethereum) {
         window.ethereum.removeListener('accountsChanged', () => {});
         window.ethereum.removeListener('chainChanged', () => {});
-        window.ethereum.removeListener('disconnect', () => {});
       }
     };
-  }, [contractAddress, contractABI]);
+  }, []);
 
   useEffect(() => {
-    if (contract && account) {
+    if (factoryContract) {
+      fetchCollections();
+    }
+  }, [factoryContract]);
+
+  useEffect(() => {
+    if (selectedCollection && account) {
       fetchOwnedNFTs();
     }
-  }, [contract, account]);
+  }, [selectedCollection, account]);
 
   return (
     <div className="max-w-4xl mx-auto p-4">
+      {/* Wallet Connection */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 className="text-2xl font-bold mb-4">NFT Minting Interface</h2>
+        <h2 className="text-2xl font-bold mb-4">NFT Collection Interface</h2>
         
-        {/* Transaction Status */}
-        {transactionStatus && (
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-blue-700">{transactionStatus}</p>
-          </div>
-        )}
-        
-        {/* IPFS Hash Display */}
-        {uploadedIPFSHash && (
-          <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <p className="text-sm font-mono break-all">
-              IPFS Hash: {uploadedIPFSHash}
-            </p>
-          </div>
-        )}
-
-        {/* Wallet Connection */}
         <div className="mb-4">
           <p className="text-sm text-gray-600">Connected Account:</p>
           <p className="font-mono">{account || 'Not connected'}</p>
           {!account && !isInitializing && (
             <button
               onClick={connectWallet}
-              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded"
             >
               Connect Wallet
             </button>
           )}
         </div>
-
+        
+        {/* Create Collection Form */}
         {account && (
-          <div className="space-y-4">
-            {/* File Upload Area */}
+          <div className="mt-6 border-t pt-6">
+            <h3 className="text-xl font-bold mb-4">Create New Collection</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  value={newCollection.name}
+                  onChange={(e) => setNewCollection({
+                    ...newCollection,
+                    name: e.target.value
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Symbol</label>
+                <input
+                  type="text"
+                  value={newCollection.symbol}
+                  onChange={(e) => setNewCollection({
+                    ...newCollection,
+                    symbol: e.target.value
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Max Supply (0 for unlimited)</label>
+                <input
+                  type="number"
+                  value={newCollection.maxSupply}
+                  onChange={(e) => setNewCollection({
+                    ...newCollection,
+                    maxSupply: e.target.value
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Mint Price (ETH)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={newCollection.mintPrice}
+                  onChange={(e) => setNewCollection({
+                    ...newCollection,
+                    mintPrice: e.target.value
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                />
+              </div>
+              
+              <button
+                onClick={createCollection}
+                disabled={loading}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Create Collection
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Collection Selection */}
+        {collections.length > 0 && (
+          <div className="mt-6 border-t pt-6">
+            <h3 className="text-xl font-bold mb-4">Select Collection</h3>
+            <select
+              value={selectedCollection || ''}
+              onChange={(e) => setSelectedCollection(e.target.value)}
+              className="block w-full rounded-md border-gray-300 shadow-sm"
+            >
+              <option value="">Select a collection</option>
+              {collections.map((addr, index) => (
+                <option key={addr} value={addr}>
+                  Collection {index + 1} ({addr})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* NFT Minting Interface */}
+        {selectedCollection && (
+          <div className="mt-6 border-t pt-6">
+            <h3 className="text-xl font-bold mb-4">Mint New NFT</h3>
+            
+            {/* File Upload */}
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <input
                 type="file"
                 onChange={(e) => {
                   const selectedFile = e.target.files[0];
                   if (selectedFile) {
-                    console.log('Selected file:', selectedFile.name);
                     setFile(selectedFile);
                     const reader = new FileReader();
                     reader.onloadend = () => {
@@ -489,7 +615,7 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
                     strokeLinecap="round" 
                     strokeLinejoin="round" 
                     strokeWidth="2" 
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L88m4-4v12"
                   />
                 </svg>
                 <span className="text-sm text-gray-500">
@@ -512,7 +638,7 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
             <button 
               onClick={mintNFT}
               disabled={loading || uploading || !file}
-              className={`w-full px-4 py-2 rounded transition-colors ${
+              className={`w-full mt-4 px-4 py-2 rounded transition-colors ${
                 loading || uploading || !file
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700'
@@ -525,14 +651,19 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
           </div>
         )}
 
-        {/* Error Message */}
+        {/* Status Messages */}
+        {transactionStatus && (
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-blue-700">{transactionStatus}</p>
+          </div>
+        )}
+        
         {error && (
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-700">{error}</p>
           </div>
         )}
         
-        {/* Success Message */}
         {success && (
           <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-green-700">{success}</p>
@@ -541,31 +672,27 @@ const NFTInterface = ({ contractAddress, contractABI }) => {
       </div>
 
       {/* NFTs Display */}
-      {account && (
-  <div className="bg-white rounded-lg shadow-lg p-6">
-    <h2 className="text-2xl font-bold mb-4">Your NFTs</h2>
-    
-    {loading ? (
-      <p className="text-gray-600">Loading NFTs...</p>
-    ) : ownedNFTs.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {ownedNFTs.map((nft) => (
-          <NFTCard
-            key={nft.tokenId.toString()}
-            tokenId={nft.tokenId}
-            seriesId={nft.seriesId}
-            tokenURI={nft.tokenURI}
-            creator={nft.creator}
-            currentSupply={nft.currentSupply}
-            maxSupply={nft.maxSupply}
-          />
-        ))}
-      </div>
-    ) : (
-      <p className="text-gray-600">No NFTs found</p>
-    )}
-  </div>
-)}
+      {selectedCollection && account && (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-bold mb-4">Your NFTs in Selected Collection</h2>
+          
+          {loading ? (
+            <p className="text-gray-600">Loading NFTs...</p>
+          ) : ownedNFTs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {ownedNFTs.map((nft) => (
+                <NFTCard
+                  key={nft.tokenId.toString()}
+                  nft={nft}
+                  contractAddress={selectedCollection}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600">No NFTs found in this collection</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

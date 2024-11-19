@@ -1,116 +1,81 @@
-import React from 'react';
-import { ethers } from 'ethers';
+import React, { useState, useEffect } from 'react';
 
-const NFTCard = ({ 
-  tokenId, 
-  seriesId, 
-  tokenURI, 
-  creator, 
-  currentSupply, 
-  maxSupply,
-  name,
-  description,
-  attributes = [],
-  isMinter,
-  isListed,
-  price
-}) => {
+const NFTCard = ({ nft }) => {
+  const [metadata, setMetadata] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        if (!nft.tokenURI) {
+          throw new Error('No token URI provided');
+        }
+
+        let url = nft.tokenURI;
+        
+        // 处理 ipfs:// 格式的 URI
+        if (url.startsWith('ipfs://')) {
+          // 替换为 Pinata 网关URL
+          url = url.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+        }
+
+        console.log('Fetching metadata from:', url);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        
+        // 处理图片 URL（如果图片也是 IPFS 格式）
+        if (data.image && data.image.startsWith('ipfs://')) {
+          data.image = data.image.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+        }
+        
+        setMetadata(data);
+        setError(null);
+      } catch (error) {
+        console.error('Error fetching metadata:', error);
+        setError(error.message);
+      }
+    };
+
+    fetchMetadata();
+  }, [nft.tokenURI]);
+
+  if (error) {
+    return (
+      <div className="border rounded-lg p-4 shadow-lg">
+        <p className="text-red-500">Error loading NFT: {error}</p>
+        <p className="text-sm text-gray-500">Token ID: {nft.tokenId?.toString()}</p>
+      </div>
+    );
+  }
+
+  if (!metadata) {
+    return (
+      <div className="border rounded-lg p-4 shadow-lg">
+        <p className="text-gray-500">Loading NFT metadata...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-lg">
-      <div className="p-4">
-        <img 
-          src={tokenURI} 
-          alt={name || `NFT #${tokenId}`}
-          className="w-full h-48 object-cover rounded-lg mb-2"
-          onError={(e) => {
-            e.target.src = '/api/placeholder/200/200';
-          }}
-        />
-        <div className="space-y-2">
-          <div>
-            <p className="font-semibold">{name}</p>
-            {description && (
-              <p className="text-sm text-gray-600">{description}</p>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <p className="font-medium">Token ID:</p>
-              <p className="text-gray-600">{tokenId.toString()}</p>
-            </div>
-            <div>
-              <p className="font-medium">Series:</p>
-              <p className="text-gray-600">{seriesId.toString()}</p>
-            </div>
-            <div>
-              <p className="font-medium">Supply:</p>
-              <p className="text-gray-600">
-                {currentSupply} / {maxSupply === '0' ? '∞' : maxSupply}
-              </p>
-            </div>
-            <div>
-              <p className="font-medium">Creator:</p>
-              <p className="text-gray-600 truncate">
-                {creator.slice(0, 6)}...{creator.slice(-4)}
-              </p>
-            </div>
-          </div>
-
-          {/* Market Status */}
-          {isListed && price && (
-            <div className="mt-2 p-2 bg-blue-50 rounded-lg">
-              <p className="text-sm font-medium text-blue-800">
-                Listed for: {ethers.formatEther(price)} TFIL
-              </p>
-            </div>
-          )}
-
-          {/* Creator Badge */}
-          {isMinter && (
-            <div className="mt-2">
-              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                Creator
-              </span>
-            </div>
-          )}
-
-          {/* Attributes */}
-          {attributes.length > 0 && (
-            <div className="mt-2">
-              <p className="text-sm font-medium mb-1">Attributes:</p>
-              <div className="grid grid-cols-2 gap-1">
-                {attributes.map((attr, index) => (
-                  <div key={index} className="text-xs bg-gray-100 rounded p-1">
-                    <span className="font-medium">{attr.trait_type}:</span>
-                    <br />
-                    <span className="text-gray-600">{attr.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Links */}
-          <div className="flex gap-2 mt-2 pt-2 border-t">
-            <a 
-              href={tokenURI} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:text-blue-800"
-            >
-              View Image ↗
-            </a>
-            <a 
-              href={`https://calibration.filfox.info/address/${creator}`}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:text-blue-800"
-            >
-              View Creator ↗
-            </a>
-          </div>
+    <div className="border rounded-lg p-4 shadow-lg">
+      <h3 className="text-xl font-bold mb-2">{metadata.name}</h3>
+      {metadata.image && (
+        <div className="relative w-full h-48">
+          <img 
+            src={metadata.image}
+            alt={metadata.name || 'NFT Image'}
+            className="w-full h-full object-cover rounded-lg"
+            onError={(e) => {
+              console.error('Image load error');
+              e.target.src = '/placeholder-image.png';
+            }}
+          />
         </div>
+      )}
+      <p className="text-gray-600 mt-2">{metadata.description}</p>
+      <div className="mt-2">
+        <p className="text-sm"><span className="font-semibold">Token ID:</span> {nft.tokenId?.toString()}</p>
       </div>
     </div>
   );
