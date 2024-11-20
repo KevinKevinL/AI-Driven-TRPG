@@ -42,7 +42,7 @@ const DiceAnimation = ({ isRolling }) => {
                 transition: isRolling ? 'none' : 'transform 0.3s ease-out' 
             }}
         >
-            <Dice3 className="w-6 h-6" />  {/* 使用 Dice3 替代 Dice */}
+            <Dice3 className="w-6 h-6 text-emerald-400" />
         </div>
     );
 };
@@ -240,12 +240,14 @@ const AttributeBox = ({ label, value, englishLabel, showDerived = true }) => {
     const derived = calculateDerivedValues(value);
     
     return (
-        <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <div className="text-sm text-gray-600">{englishLabel}</div>
-            <div className="text-lg font-bold">{label}</div>
-            <div className="text-2xl text-blue-600 mt-1">{derived.full}</div>
+        <div className="bg-slate-800 p-4 rounded-lg shadow-emerald-900/50 shadow-lg 
+                        hover:shadow-emerald-700/50 hover:shadow-xl transition-shadow
+                        border border-emerald-900/30 backdrop-blur-sm">
+            <div className="text-emerald-500/80 text-sm font-lovecraft">{englishLabel}</div>
+            <div className="text-gray-100 text-lg font-bold font-lovecraft">{label}</div>
+            <div className="text-2xl text-emerald-400 mt-1 font-numbers">{derived.full}</div>
             {showDerived && typeof value === 'number' && value > 0 && (
-                <div className="text-sm text-gray-500 mt-2">
+                <div className="text-sm text-emerald-600/80 mt-2 font-numbers">
                     <div>半值: {derived.half}</div>
                     <div>五分之一: {derived.fifth}</div>
                 </div>
@@ -337,16 +339,44 @@ const COCCharacterCreator = () => {
 
     return (
         <>
-            <Head>
-                <title>COC 调查员属性生成器</title>
-                <meta name="description" content="克苏鲁的呼唤 调查员属性生成器" />
-            </Head>
+<Head>
+    <title>COC 调查员属性生成器</title>
+    <meta name="description" content="克苏鲁的呼唤 调查员属性生成器" />
+    <style>{`
+        body {
+            background-color: #0a0d11;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 60%),
+                radial-gradient(circle at 25% 25%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                linear-gradient(to bottom right, rgba(16, 185, 129, 0.02), transparent);
+            min-height: 100vh;
+        }
+        .font-lovecraft {
+            font-family: 'Cinzel Decorative', 'Times New Roman', serif;
+            letter-spacing: 0.05em;
+        }
+        .font-numbers {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+        }
+    `}</style>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" 
+          rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" 
+          rel="stylesheet" />
+</Head>
             
             <div className="max-w-4xl mx-auto p-6">
                 <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-bold mb-4">克苏鲁的呼唤 调查员属性生成器</h1>
-                    <div className="mb-4 relative">
-                        <label className="mr-2">年龄 (15-90):</label>
+                    <h1 className="text-4xl font-bold mb-4 text-emerald-500 font-lovecraft 
+                                 tracking-wider drop-shadow-lg">
+                        克苏鲁的呼唤
+                        <span className="block text-2xl mt-2 text-emerald-400/80">
+                            调查员属性生成器
+                        </span>
+                    </h1>
+                    <div className="mb-6 relative">
+                        <label className="mr-2 text-gray-300 font-lovecraft">年龄 (15-90):</label>
                         <input
                             type="number"
                             min="15"
@@ -354,11 +384,14 @@ const COCCharacterCreator = () => {
                             value={age}
                             onChange={handleAgeChange}
                             onBlur={handleAgeBlur}
-                            className={`border rounded px-2 py-1 w-20 text-center 
-                                     ${showAgeError ? 'border-red-500' : 'border-gray-300'}`}
+                            className={`bg-slate-800 text-emerald-400 border 
+                                      rounded px-2 py-1 w-20 text-center font-numbers
+                                      ${showAgeError ? 'border-red-500' : 'border-emerald-900'}
+                                      focus:outline-none focus:border-emerald-500
+                                      transition-colors`}
                         />
                         {showAgeError && (
-                            <div className="absolute w-full text-red-500 text-sm mt-1">
+                            <div className="absolute w-full text-red-500 text-sm mt-1 font-lovecraft">
                                 年龄必须在15-90岁之间
                             </div>
                         )}
@@ -366,19 +399,22 @@ const COCCharacterCreator = () => {
                     <button
                         onClick={handleReroll}
                         disabled={isRolling}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg 
-                                 hover:bg-blue-700 transition-colors
+                        className="bg-emerald-900/50 text-emerald-400 px-8 py-3 rounded-lg 
+                                 hover:bg-emerald-800/50 transition-colors
                                  flex items-center justify-center gap-2 mx-auto 
-                                 disabled:bg-blue-400 min-w-[160px]"
+                                 disabled:bg-slate-800/50 disabled:text-emerald-700
+                                 min-w-[160px] border border-emerald-900/30
+                                 shadow-lg shadow-emerald-900/30
+                                 font-lovecraft tracking-wide"
                     >
                         <DiceAnimation isRolling={isRolling} />
-                        {isRolling ? "投掷中..." : "重新投掷属性"}
+                        {isRolling ? "正在探索未知..." : "重投命运骰"}
                     </button>
                 </div>
 
                 <div className={`transition-opacity duration-300 ${isRolling ? 'opacity-50' : 'opacity-100'}`}>
                     <div className="mb-8">
-                        <h2 className="text-xl font-semibold mb-4">基础属性</h2>
+                        <h2 className="text-xl font-semibold mb-4 text-emerald-400 font-lovecraft">基础属性</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {attributeMapping.map(attr => (
                                 <AttributeBox
@@ -392,7 +428,7 @@ const COCCharacterCreator = () => {
                     </div>
 
                     <div>
-                        <h2 className="text-xl font-semibold mb-4">派生属性</h2>
+                        <h2 className="text-xl font-semibold mb-4 text-emerald-400 font-lovecraft">派生属性</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {derivedAttributes.map(attr => (
                                 <AttributeBox
