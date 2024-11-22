@@ -1,0 +1,124 @@
+/* 整体样式 */
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(120deg, #1a1a2e, #16213e);
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* 容器 */
+#container {
+    display: flex;
+    width: 80%;
+    height: 70%;
+    border: 1px solid #4e4e50;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* 左侧对话框 */
+#dialogue-box {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-right: 2px solid #4e4e50;
+}
+
+/* 对话框内容样式 */
+#dialogue-content {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 每条消息的间隔 */
+    padding: 10px;
+}
+
+/* 通用对话消息样式 */
+.message {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+    background: #1a1a2e;
+    box-shadow: 0 0 8px 2px rgba(0, 212, 255, 0.5); /* 蓝色发光效果 */
+    color: #ffffff;
+}
+
+/* AI消息靠左 */
+.ai-message {
+    align-self: flex-start; /* 靠左 */
+}
+
+/* 玩家消息靠右 */
+.player-message {
+    align-self: flex-end; /* 靠右 */
+}
+
+/* AI消息文本 */
+.ai-message .label {
+    color: #00d4ff;
+}
+
+/* 玩家消息文本 */
+.player-message .label {
+    color: #ffbf00;
+}
+
+#input-area {
+    display: flex;
+    align-items: center;
+}
+
+#user-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    margin-right: 10px;
+    background: #333;
+    color: #fff;
+}
+
+#send-btn {
+    padding: 10px 20px;
+    background: #00d4ff;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+#send-btn:hover {
+    background: #00a1c3;
+}
+
+/* 右侧人物卡 */
+#character-card {
+    flex: 1;
+    background: rgba(30, 30, 40, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #00d4ff;
+    text-align: center;
+    border-left: 2px solid #4e4e50;
+}
+
+#character-card h2 {
+    margin-bottom: 20px;
+}
