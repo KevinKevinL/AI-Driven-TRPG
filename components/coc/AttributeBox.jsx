@@ -1,4 +1,12 @@
-const AttributeBox = ({ label, value, englishLabel, showDerived = true }) => {
+import React from 'react';
+
+const calculateDerivedValues = (value) => ({
+    full: value,
+    half: Math.floor(value / 2),
+    fifth: Math.floor(value / 5)
+});
+
+export const AttributeBox = ({ label, value, englishLabel, showDerived = true }) => {
     const derived = calculateDerivedValues(value);
     
     return (
