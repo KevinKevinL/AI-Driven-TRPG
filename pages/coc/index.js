@@ -29,7 +29,7 @@ const COCCharacterCreator = () => {
     if (selectedProfession) {
       router.push({
         pathname: '/coc/attributes',
-        query: { profession: selectedProfession.title }
+        query: { profession: selectedProfession.key }  // 使用 key 而不是 title
       });
     }
   };
