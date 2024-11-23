@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { ProfessionCard } from '@components/coc/ProfessionCard';
 import { ProfessionInfoModal } from '@components/coc/ProfessionInfoModal';
 import { PROFESSIONS } from '@constants/professions';
+import { character } from '@utils/characterState';
 
 const COCCharacterCreator = () => {
   const [selectedProfession, setSelectedProfession] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [currentProfession, setCurrentProfession] = useState(null);
   const router = useRouter();
+
+  // 在组件加载时清除之前的角色数据
+  useEffect(() => {
+    character.clear();
+  }, []);
 
   const handleCardClick = (profession) => {
     setCurrentProfession(profession);
@@ -23,13 +29,15 @@ const COCCharacterCreator = () => {
 
   const handleProfessionSelect = (profession) => {
     setSelectedProfession(profession);
+    character.setProfession(profession);
+    character.save();
   };
 
   const handleContinue = () => {
     if (selectedProfession) {
       router.push({
         pathname: '/coc/attributes',
-        query: { profession: selectedProfession.key }  // 使用 key 而不是 title
+        query: { profession: selectedProfession.key }
       });
     }
   };

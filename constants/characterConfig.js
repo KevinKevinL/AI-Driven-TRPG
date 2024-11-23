@@ -17,5 +17,6 @@ export const derivedAttributes = [
     { key: 'hitPoints', label: '生命值', englishLabel: 'HP' },
     { key: 'moveRate', label: '移动速度', englishLabel: 'MOV' },
     { key: 'damageBonus', label: '伤害加值', englishLabel: 'DB' },
-    { key: 'build', label: '体格', englishLabel: 'Build' }
+    { key: 'build', label: '体格', englishLabel: 'Build' },
+    { key: 'professionalPoints', label: '职业技能点', englishLabel: 'Profession Points' }
 ];

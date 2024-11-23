@@ -119,7 +119,34 @@ export const calculateMoveRate = (strength, dexterity, size, age) => {
     return baseMove;
 };
 
-export const generateAttributes = (age = 25) => {
+export const calculateProfessionalPoints = (attributes, profession) => {
+    if (!profession) return 0;
+    
+    const { education, luck, dexterity, appearance, power, strength } = attributes;
+    
+    switch (profession.skillPoints) {
+        case "EDU × 4":
+            return education * 4;
+        case "EDU × 2 + LUCK × 2":
+            return education * 2 + luck * 2;
+        case "EDU × 2 + DEX × 2":
+            return education * 2 + dexterity * 2;
+        case "EDU × 2 + APP × 2":
+            return education * 2 + appearance * 2;
+        case "EDU × 2 + POW × 2":
+            return education * 2 + power * 2;
+        case "EDU × 2 + STR × 2":
+            return education * 2 + strength * 2;
+        case "POW × 2 + STR × 2":
+            return power * 2 + strength * 2;
+        case "DEX × 2 + STR × 2":
+            return dexterity * 2 + strength * 2;
+        default:
+            return 200; // 默认值
+    }
+};
+
+export const generateAttributes = (age = 25, profession = null) => {
     let attributes = {
         strength: DiceSystem.roll3D6() * 5,
         constitution: DiceSystem.roll3D6() * 5,
@@ -137,6 +164,7 @@ export const generateAttributes = (age = 25) => {
     const { damageBonus, build } = calculateDamageBonusAndBuild(attributes.strength, attributes.size);
     const moveRate = calculateMoveRate(attributes.strength, attributes.dexterity, attributes.size, age);
     const hitPoints = Math.floor((attributes.constitution + attributes.size) / 10);
+    const professionalPoints = calculateProfessionalPoints(attributes, profession);
 
     return {
         ...attributes,
@@ -147,6 +175,7 @@ export const generateAttributes = (age = 25) => {
         hitPoints,
         moveRate,
         damageBonus,
-        build
+        build,
+        professionalPoints
     };
 };

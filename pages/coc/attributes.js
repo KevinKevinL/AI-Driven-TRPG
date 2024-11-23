@@ -6,7 +6,9 @@ import { AttributeBox } from '@components/coc/AttributeBox';
 import { DiceAnimation } from '@components/coc/DiceAnimation';
 import { generateAttributes } from '@utils/diceSystem';
 import { attributeMapping, derivedAttributes } from '@constants/characterConfig';
+import { skillCategories } from '@constants/skills';
 import { PROFESSIONS } from '@constants/professions';
+import { character } from '@utils/characterState';
 
 const AttributesGenerator = () => {
   const [attributes, setAttributes] = useState(null);
@@ -18,72 +20,132 @@ const AttributesGenerator = () => {
   const { profession: professionTitle } = router.query;
   const profession = professionTitle && PROFESSIONS[professionTitle];
 
+  // 初始化时检查状态
   useEffect(() => {
+    // 设置客户端渲染标志
     setIsClient(true);
-    setAttributes(generateAttributes(age));
-  }, [age]);
+
+    // 如果没有保存的职业信息但有 URL 参数中的职业，则设置职业
+    if (!character.profession && profession) {
+      character.setProfession(profession);
+    }
+
+    // 尝试加载已保存的属性和年龄
+    const savedCharacter = character.export();
+    if (savedCharacter.attributes) {
+      setAttributes(savedCharacter.attributes);
+      setAge(savedCharacter.metadata.age || 25);
+    } else {
+      // 如果没有保存的属性，生成新的
+      const newAttributes = generateAttributes(age);
+      setAttributes(newAttributes);
+      character.setAttributes(newAttributes);
+      character.updateMetadata({ age });
+      character.save();
+    }
+  }, [profession]);
+
+  // 年龄变化时重新生成属性
+  useEffect(() => {
+    if (isClient && profession) {
+      const newAttributes = generateAttributes(age, profession);
+      setAttributes(newAttributes);
+      character.setAttributes(newAttributes);
+      character.updateMetadata({ age });
+      character.save();
+    }
+  }, [age, profession, isClient]);
 
   const handleReroll = () => {
     setIsRolling(true);
     setTimeout(() => {
-      setAttributes(generateAttributes(age));
+      const newAttributes = generateAttributes(age, profession);
+      setAttributes(newAttributes);
+      character.setAttributes(newAttributes);
+      character.save();
       setIsRolling(false);
     }, 800);
+  };
+
+  const handleContinue = () => {
+    if (attributes) {
+      character.save();
+      router.push({
+        pathname: '/coc/skills',
+        query: { profession: professionTitle }
+      });
+    }
   };
 
   const handleAgeChange = (e) => {
     const value = e.target.value;
     
-    // 允许输入框为空，方便用户删除后重新输入
     if (value === '') {
       setAge('');
       return;
     }
 
-    // 转换为数字
     const newAge = parseInt(value);
     
-    // 检查是否是有效数字
     if (isNaN(newAge)) {
       return;
     }
     
-    // 更新年龄值，但不立即进行范围检查
     setAge(value);
     
-    // 如果超出范围，显示错误信息
     if (newAge < 15 || newAge > 90) {
       setShowAgeError(true);
       setTimeout(() => setShowAgeError(false), 3000);
     } else {
       setShowAgeError(false);
+      character.updateMetadata({ age: newAge });
     }
   };
 
   const handleAgeBlur = () => {
-    // 当输入框失去焦点时进行范围校正
     const newAge = parseInt(age);
     
     if (isNaN(newAge)) {
-      setAge(25); // 如果不是有效数字，重置为默认值
+      setAge(25);
+      character.updateMetadata({ age: 25 });
       return;
     }
 
+    let finalAge = newAge;
     if (newAge < 15) {
-      setAge(15);
+      finalAge = 15;
     } else if (newAge > 90) {
-      setAge(90);
-    } else {
-      setAge(newAge); // 确保存储为数字而不是字符串
+      finalAge = 90;
     }
     
+    setAge(finalAge);
+    character.updateMetadata({ age: finalAge });
     setShowAgeError(false);
   };
 
-  if (!isClient || !profession) {
+  // 在 profession 不存在时添加了加载状态的处理
+  if (!isClient) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#0a0d11]">
         <div className="text-xl text-emerald-400 font-lovecraft">加载中...</div>
+      </div>
+    );
+  }
+
+  // 确保在没有 profession 时也能正确显示
+  if (!profession) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0a0d11]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-xl text-emerald-400 font-lovecraft">无效的职业选择</div>
+          <Link 
+            href="/coc"
+            className="text-emerald-400 hover:text-emerald-300 
+                     transition-colors font-lovecraft tracking-wider"
+          >
+            ← 返回职业选择
+          </Link>
+        </div>
       </div>
     );
   }
@@ -210,17 +272,18 @@ const AttributesGenerator = () => {
 
           {/* 继续按钮 */}
           <div className="mt-8 text-center">
-            <button
-              className="bg-emerald-900/50 text-emerald-400 px-8 py-3 rounded-lg 
-                       hover:bg-emerald-800/50 transition-colors
-                       inline-flex items-center gap-2
-                       min-w-[160px] border border-emerald-900/30
-                       shadow-lg shadow-emerald-900/30
-                       font-lovecraft tracking-wide"
-            >
-              继续分配技能点 →
-            </button>
-          </div>
+        <button
+          onClick={handleContinue}
+          className="bg-emerald-900/50 text-emerald-400 px-8 py-3 rounded-lg 
+                   hover:bg-emerald-800/50 transition-colors
+                   inline-flex items-center gap-2
+                   min-w-[160px] border border-emerald-900/30
+                   shadow-lg shadow-emerald-900/30
+                   font-lovecraft tracking-wide"
+        >
+          继续分配技能点 →
+        </button>
+      </div>
         </div>
       </div>
     </>

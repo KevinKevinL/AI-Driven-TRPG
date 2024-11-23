@@ -12,7 +12,7 @@ export const PROFESSIONS = {
     title: "艺术家",
     skills: ["艺术", "巧手"],
     creditRating: "9-50", 
-    skillPoints: "EDU × 2 + POW × 2 或 DEX × 2",
+    skillPoints: "EDU × 2 + LUCK × 2",
     description: "我是一位追求艺术完美的创作者。我灵巧的双手能将灵感转化为触动人心的艺术品,同时也善于通过作品与人交流。",
   },
   "Clergy": {
@@ -28,7 +28,7 @@ export const PROFESSIONS = {
     title: "罪犯",
     skills: ["巧手", "枪械", "格斗", "闪避"],
     creditRating: "5-65",
-    skillPoints: "EDU × 2 + DEX × 2 或 STR × 2",
+    skillPoints: "EDU × 2 + DEX × 2",
     description: "我是游走在法律边缘的暗影人物。精通巧手技巧和各类武器,在危险时刻总能依靠灵活的身手脱身。",
   },
   "Doctor": {
@@ -60,7 +60,7 @@ export const PROFESSIONS = {
     title: "农场主",
     skills: ["枪械", "驾驶", "交际", "侦查"],
     creditRating: "9-30",
-    skillPoints: "EDU × 2 + DEX × 2 或 STR × 2",
+    skillPoints: "DEX × 2 + STR × 2",
     description: "我是一位经验丰富的农场经营者。精通农机驾驶和维护,善于观察天气变化,也懂得与人打交道。必要时,我也能用枪保护自己的财产。",
   },
   "Hacker": {
@@ -100,15 +100,15 @@ export const PROFESSIONS = {
     title: "军官",
     skills: ["交际", "枪械", "心理学"],
     creditRating: "20-70",
-    skillPoints: "EDU × 2 + DEX × 2 或 STR × 2",
+    skillPoints: "EDU × 2 + DEX × 2",
     description: "我是一位经验丰富的军事指挥官。精通枪械使用,善于领导和激励部下,能准确把握战场局势和人员心理。",
   },
   "Zealot": {
     key: "Zealot",
     title: "邪教徒",
     skills: ["神秘学", "心理学", "闪避"],
-    creditRating: "0-30",
-    skillPoints: "EDU × 2 + APP × 2 或 POW × 2",
+    creditRating: "0-70",
+    skillPoints: "EDU × 2 + POW × 2",
     description: "我是一位狂热的信仰追随者。深谙神秘学知识,善于洞察和影响他人心理,在危险时刻总能化险为夷。",
   },
   "Detective": {
@@ -116,7 +116,7 @@ export const PROFESSIONS = {
     title: "警探",
     skills: ["侦查", "心理学", "枪械", "交际"],
     creditRating: "20-50",
-    skillPoints: "EDU × 2 + DEX × 2 或 STR × 2",
+    skillPoints: "EDU × 2 + STR × 2",
     description: "我是一位专业的刑事侦查员。凭借敏锐的洞察力、对犯罪心理的理解和丰富的办案经验,我能破解各种复杂案件。",
   },
   "PoliceOfficer": {
@@ -124,7 +124,7 @@ export const PROFESSIONS = {
     title: "警察",
     skills: ["驾驶", "枪械", "格斗"],
     creditRating: "9-30",
-    skillPoints: "EDU × 2 + DEX × 2 或 STR × 2",
+    skillPoints: "POW × 2 + STR × 2",
     description: "我是一位尽职的治安维护者。精通驾驶和各类武器使用,在紧急情况下能迅速反应并处理各种突发事件。",
   },
   "PrivateInvestigator": {
@@ -132,7 +132,7 @@ export const PROFESSIONS = {
     title: "私家侦探",
     skills: ["侦查", "潜行", "交际", "心理学"],
     creditRating: "9-30",
-    skillPoints: "EDU × 2 + DEX × 2 或 STR × 2",
+    skillPoints: "EDU × 2 + DEX × 2",
     description: "我是一位独立的真相探寻者。通过细致的观察、隐秘的跟踪和巧妙的交谈,我能发现并揭示各种隐藏的秘密。",
   },
   "Professor": {
@@ -148,7 +148,7 @@ export const PROFESSIONS = {
     title: "士兵",
     skills: ["格斗", "闪避", "枪械"],
     creditRating: "9-30",
-    skillPoints: "EDU × 2 + DEX × 2 或 STR × 2",
+    skillPoints: "POW × 2 + STR × 2",
     description: "我是一位训练有素的战士。精通各种战斗技能,面对危险时能迅速反应并作出正确判断。",
   },
   "TribalMember": {
@@ -156,7 +156,7 @@ export const PROFESSIONS = {
     title: "部落成员",
     skills: ["神秘学", "侦查", "格斗"],
     creditRating: "0-15",
-    skillPoints: "EDU × 2 + DEX × 2 或 STR × 2",
+    skillPoints: "EDU × 2 + LUCK × 2",
     description: "我是一位与自然紧密相连的部落成员。精通古老的神秘仪式,具备敏锐的观察力和出色的生存技能。",
   },
 };
