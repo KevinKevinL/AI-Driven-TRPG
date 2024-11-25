@@ -17,6 +17,7 @@ class Character {
       this.equipment = [];
       this.backstory = '';
       this.notes = '';
+      this.keyConnection = null; // 关键背景连接
     }
   
     // 设置职业
@@ -61,11 +62,7 @@ class Character {
     removeEquipment(index) {
       this.equipment = this.equipment.filter((_, i) => i !== index);
     }
-  
-    // // 设置背景故事
-    // setBackstory(story) {
-    //   this.backstory = story;
-    // }
+    
     // 设置背景信息
     setBackground(background) {
       // 将背景信息拼接成完整的描述写入 backstory
@@ -79,6 +76,16 @@ class Character {
         Trait: ${trait || 'Undefined'}
       `;
       this.backstory = backstoryDescription.trim();
+    }
+
+    // 设置关键背景连接
+    setKeyConnection(keyConnection) {
+        this.keyConnection = keyConnection;
+    }
+
+    // 获取当前的关键背景连接
+    getKeyConnection() {
+        return this.keyConnection;
     }
   
     // 添加笔记
@@ -96,7 +103,8 @@ class Character {
         creditRating: this.creditRating,
         equipment: this.equipment,
         backstory: this.backstory,
-        notes: this.notes
+        notes: this.notes,
+        keyConnection: this.keyConnection
       };
     }
   
@@ -110,6 +118,7 @@ class Character {
       if (data.equipment) this.equipment = [...data.equipment];
       if (data.backstory) this.backstory = data.backstory;
       if (data.notes) this.notes = data.notes;
+      if (data.keyConnection) this.keyConnection = data.keyConnection;
     }
   
     // 将角色数据保存到localStorage
@@ -138,7 +147,8 @@ class Character {
             Object.keys(this.skills).includes(skill)
           ) : false,
         hasValidCreditRating: this.validateCreditRating(),
-        hasBasicInfo: !!(this.metadata.name && this.metadata.age)
+        hasBasicInfo: !!(this.metadata.name && this.metadata.age),
+        hasCompleteBackground: this.validateBackground()
       };
   
       return {
@@ -152,6 +162,19 @@ class Character {
       if (!this.profession) return false;
       const [min, max] = this.profession.creditRating.split('-').map(Number);
       return this.creditRating >= min && this.creditRating <= max;
+    }
+
+    // 验证背景是否完整
+    validateBackground() {
+        if (!this.backstory) return false;
+
+        const keys = ["belief", "importantPerson", "reason", "place", "possession", "trait"];
+        const backgroundValues = keys.map(key => {
+            const match = new RegExp(`${key}:\\s*(.*)`, 'i').exec(this.backstory);
+            return match ? match[1] : null;
+        });
+
+        return backgroundValues.every(value => value && value.trim() !== "") && !!this.keyConnection;
     }
   
     // 清除所有数据
@@ -171,6 +194,7 @@ class Character {
       this.equipment = [];
       this.backstory = '';
       this.notes = '';
+      this.keyConnection = null;
     }
   }
   
