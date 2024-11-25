@@ -98,14 +98,14 @@ const BackgroundPage = () => {
   const handleFinalize = () => {
     const validation = validateSelection();
     if (!validation.isValid) {
-      setValidationError(validation.error);
+      setValidationErrors(validation.errors);
       return;
     }
     character.setBackground(selectedBackground); // 确保背景选择持久化
-    character.keyConnection = keyConnection; // Save key connection
+    character.setKeyConnection(keyConnection); // 使用封装方法保存关键连接
     character.save(); // 保存背景数据
-    console.log("Finalized Background:", character.backstory);
-    console.log("Key Connection:", keyConnection);
+    console.log("Finalized Background:", character.export().backstory); // 调试输出背景信息
+    console.log("Key Connection:", character.getKeyConnection()); // 调试输出关键连接
     router.push("/coc/summary"); // 跳转到下一页面
   };
 
@@ -128,7 +128,7 @@ const BackgroundPage = () => {
       <div className="min-h-screen bg-[#0a0d11] py-10">
         <div className="max-w-4xl mx-auto px-6">
           <Link
-            href="/coc/skills"
+            href={`/coc/skills?profession=${professionTitle}`}
             className="inline-block mb-6 text-emerald-400 hover:text-emerald-300 
                      transition-colors font-lovecraft tracking-wider"
           >
@@ -140,7 +140,7 @@ const BackgroundPage = () => {
                          tracking-wider drop-shadow-lg text-center mb-4">
               {profession?.title || "调查员"}
               <span className="block text-2xl mt-2 text-emerald-400/80">
-                选择或随机生成背景信息
+                创建背景信息
               </span>
             </h1>
             <div className="text-center text-emerald-400 font-lovecraft">
@@ -260,4 +260,3 @@ const BackgroundPage = () => {
 };
 
 export default BackgroundPage;
-
