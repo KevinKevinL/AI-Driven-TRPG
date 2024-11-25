@@ -266,7 +266,7 @@ const SkillsAssignment = () => {
     }
   
     character.save();
-    router.push('/coc/character-sheet');
+    router.push('/coc/background');
   };
 
   const isInProfessionSkills = (skillLabel) => {
