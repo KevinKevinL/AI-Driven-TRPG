@@ -23,7 +23,7 @@ const BackgroundPage = () => {
   const router = useRouter();
   const { profession: professionTitle } = router.query;
   const profession = professionTitle && PROFESSIONS[professionTitle];
-  const [validationError, setValidationError] = useState(''); 
+  const [validationErrors, setValidationErrors] = useState([]); 
 
   // Load background from character state on mount
   useEffect(() => {
@@ -31,7 +31,14 @@ const BackgroundPage = () => {
 
     const savedBackground = character.backstory
       ? parseBackstory(character.backstory)
-      : {};
+      : {
+        belief: null,
+        importantPerson: null,
+        reason: null,
+        place: null,
+        possession: null,
+        trait: null,
+      };
     setSelectedBackground(savedBackground);
     setKeyConnection(character.keyConnection || null);
   }, [profession]);
@@ -52,21 +59,23 @@ const BackgroundPage = () => {
 
   // 验证逻辑
   const validateSelection = () => {
-    const allSelected = Object.values(selectedBackground).every((value) => value !== null);
+    const allSelected = Object.values(selectedBackground).every(
+      (value) => value && value.trim() !== ""
+    );
     const hasKeyConnection = keyConnection !== null;
+    const errors = [];
+    if (!allSelected) errors.push("所有条目必须选择内容");
+    if (!hasKeyConnection) errors.push("必须选择一个关键链接");
+
     return {
-      isValid: allSelected && hasKeyConnection,
-      error: allSelected
-        ? hasKeyConnection
-          ? ''
-          : '请选择一个关键连接！'
-        : '请确保所有条目都有选择！',
+      isValid: errors.length === 0,
+      errors,
     };
   };
 
   useEffect(() => {
     const validation = validateSelection();
-    setValidationError(validation.error);
+    setValidationErrors(validation.errors); // 更新错误列表
   }, [selectedBackground, keyConnection]);
 
   // 为所有类别随机选择选项
@@ -212,23 +221,33 @@ const BackgroundPage = () => {
               </div>
             ))}
           </div>
-          
+          <br></br>
           {/* 错误提示 */}
-          {validationError && (
-            <div className="mt-4 text-red-500 text-center font-lovecraft">{validationError}</div>
+          {validationErrors.length > 0 && (
+            <div className="mb-4 p-4 bg-emerald-900/20 rounded-lg">
+              <h3 className="text-lg font-lovecraft text-emerald-400 mb-2">完成背景创建需要：</h3>
+              <ul className="text-sm text-emerald-400/80 space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index} className={`flex items-center ${error.includes("必须") ? "text-red-400" : "text-emerald-500"}`}>
+                    {error.includes("必须") ? "✗" : "✓"} {error}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
           {/* 确认按钮 */}
           <div className="text-center mt-10">
             <button
               onClick={handleFinalize}
-              disabled={!!validationError}
+              disabled={validationErrors.length > 0}
               className={`px-8 py-3 bg-emerald-900/50 hover:bg-emerald-800/50 
                 rounded-lg border border-emerald-900/30 shadow-lg shadow-emerald-900/30
-                text-emerald-400 text-lg font-lovecraft transition-colors ${
-                  validationError
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-emerald-800'
+                text-emerald-400 text-lg font-lovecraft transition-colors 
+                ${
+                  validationErrors.length > 0
+                    ? 'bg-slate-800/50 text-emerald-700 cursor-not-allowed'
+                    : 'bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50'
                 }`}
             >
               背景和关键链接的选择完成
