@@ -22,7 +22,8 @@ const BackgroundPage = () => {
   const [isRolling, setIsRolling] = useState(false);
   const router = useRouter();
   const { profession: professionTitle } = router.query;
-  const profession = professionTitle && PROFESSIONS[professionTitle]; 
+  const profession = professionTitle && PROFESSIONS[professionTitle];
+  const [validationError, setValidationError] = useState(''); 
 
   // Load background from character state on mount
   useEffect(() => {
@@ -49,6 +50,25 @@ const BackgroundPage = () => {
     return parsed;
   };
 
+  // 验证逻辑
+  const validateSelection = () => {
+    const allSelected = Object.values(selectedBackground).every((value) => value !== null);
+    const hasKeyConnection = keyConnection !== null;
+    return {
+      isValid: allSelected && hasKeyConnection,
+      error: allSelected
+        ? hasKeyConnection
+          ? ''
+          : '请选择一个关键连接！'
+        : '请确保所有条目都有选择！',
+    };
+  };
+
+  useEffect(() => {
+    const validation = validateSelection();
+    setValidationError(validation.error);
+  }, [selectedBackground, keyConnection]);
+
   // 为所有类别随机选择选项
   const rollAll = () => {
     setIsRolling(true);
@@ -67,6 +87,11 @@ const BackgroundPage = () => {
   };
 
   const handleFinalize = () => {
+    const validation = validateSelection();
+    if (!validation.isValid) {
+      setValidationError(validation.error);
+      return;
+    }
     character.setBackground(selectedBackground); // 确保背景选择持久化
     character.keyConnection = keyConnection; // Save key connection
     character.save(); // 保存背景数据
@@ -167,7 +192,7 @@ const BackgroundPage = () => {
 
                 {/* 条目选择 */}
                 <select
-                  className="w-full bg-slate-700 text-emerald-400 rounded px-2 py-1"
+                  className="w-full bg-slate-700 text-emerald-400 font-lovecraft rounded px-2 py-1"
                   value={selectedBackground[category] || ""}
                   onChange={(e) =>
                     setSelectedBackground((prev) => {
@@ -187,17 +212,24 @@ const BackgroundPage = () => {
               </div>
             ))}
           </div>
+          
+          {/* 错误提示 */}
+          {validationError && (
+            <div className="mt-4 text-red-500 text-center font-lovecraft">{validationError}</div>
+          )}
 
           {/* 确认按钮 */}
           <div className="text-center mt-10">
             <button
               onClick={handleFinalize}
-              className="bg-emerald-900/50 text-emerald-400 px-8 py-3 rounded-lg 
-                       hover:bg-emerald-800/50 transition-colors
-                       inline-flex items-center gap-2
-                       min-w-[160px] border border-emerald-900/30
-                       shadow-lg shadow-emerald-900/30
-                       font-lovecraft tracking-wide"
+              disabled={!!validationError}
+              className={`px-8 py-3 bg-emerald-900/50 hover:bg-emerald-800/50 
+                rounded-lg border border-emerald-900/30 shadow-lg shadow-emerald-900/30
+                text-emerald-400 text-lg font-lovecraft transition-colors ${
+                  validationError
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-emerald-800'
+                }`}
             >
               背景和关键链接的选择完成
             </button>
