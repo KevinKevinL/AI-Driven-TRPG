@@ -62,9 +62,23 @@ class Character {
       this.equipment = this.equipment.filter((_, i) => i !== index);
     }
   
-    // 设置背景故事
-    setBackstory(story) {
-      this.backstory = story;
+    // // 设置背景故事
+    // setBackstory(story) {
+    //   this.backstory = story;
+    // }
+    // 设置背景信息
+    setBackground(background) {
+      // 将背景信息拼接成完整的描述写入 backstory
+      const { belief, importantPerson, reason, place, possession, trait } = background;
+      const backstoryDescription = `
+        Belief: ${belief || 'Undefined'}
+        Important Person: ${importantPerson || 'Undefined'}
+        Reason: ${reason || 'Undefined'}
+        Significant Place: ${place || 'Undefined'}
+        Treasured Possession: ${possession || 'Undefined'}
+        Trait: ${trait || 'Undefined'}
+      `;
+      this.backstory = backstoryDescription.trim();
     }
   
     // 添加笔记
