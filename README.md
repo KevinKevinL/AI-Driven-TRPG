@@ -23,6 +23,8 @@ RPC URL: https://rpc.cardona.zkevm-rpc.com
    ```bash
    npm install
    npx hardhat compile
+   npm install axios
+   npm install react-markdown
    ```
 5. 运行项目：
    ```bash
