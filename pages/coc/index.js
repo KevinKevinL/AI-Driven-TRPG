@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { ProfessionCard } from '@components/coc/ProfessionCard';
 import { ProfessionInfoModal } from '@components/coc/ProfessionInfoModal';
 import { PROFESSIONS } from '@constants/professions';
+import DatabaseManager from '@components/coc/DatabaseManager';
 import { character } from '@utils/characterState';
 
 const COCCharacterCreator = () => {
@@ -11,6 +12,14 @@ const COCCharacterCreator = () => {
   const [showModal, setShowModal] = useState(false);
   const [currentProfession, setCurrentProfession] = useState(null);
   const router = useRouter();
+  
+  // 使用数据库管理器
+  const {
+    currentCharacterId,
+    dbStatus,
+    error,
+    saveProfessionChoice
+  } = DatabaseManager();
 
   // 在组件加载时清除之前的角色数据
   useEffect(() => {
@@ -29,16 +38,30 @@ const COCCharacterCreator = () => {
 
   const handleProfessionSelect = (profession) => {
     setSelectedProfession(profession);
+    // 只保存到前端状态
     character.setProfession(profession);
     character.save();
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedProfession) {
-      router.push({
-        pathname: '/coc/attributes',
-        query: { profession: selectedProfession.key }
-      });
+      // 先保存到数据库
+      if (currentCharacterId) {
+        try {
+          await saveProfessionChoice(currentCharacterId, selectedProfession.title);
+          // 保存成功后再跳转
+          router.push({
+            pathname: '/coc/attributes',
+            query: { 
+              profession: selectedProfession.key,
+              characterId: currentCharacterId
+            }
+          });
+        } catch (error) {
+          // 可以添加错误处理，比如显示提示信息
+          console.error('保存职业选择失败:', error);
+        }
+      }
     }
   };
 
@@ -51,6 +74,13 @@ const COCCharacterCreator = () => {
       
       <div className="min-h-screen bg-[#0a0d11] bg-gradient-radial-emerald py-10">
         <div className="max-w-6xl mx-auto px-6">
+          {/* 数据库状态信息 */}
+          {(dbStatus || error) && (
+            <div className={`text-center mb-4 ${error ? 'text-red-500' : 'text-emerald-400'}`}>
+              {error || dbStatus}
+            </div>
+          )}
+
           {/* 标题 */}
           <div className="text-center mb-10">
             <h1 className="text-4xl font-bold text-emerald-500 font-lovecraft 
