@@ -22,6 +22,8 @@ const DatabaseManager = () => {
       const result = await executeQuery(createCharacterQuery);
       const newId = result.insertId;
       
+      // 保存新的角色ID到localStorage
+      localStorage.setItem('currentCharacterId', newId.toString());
       setCurrentCharacterId(newId);
       setDbStatus(`创建了新角色，ID: ${newId}`);
       return newId;
@@ -33,21 +35,17 @@ const DatabaseManager = () => {
 
   // 初始化职业数据
   const initializeProfessions = async () => {
-    // 如果已经完成初始化或正在初始化，直接返回
     if (professionInitComplete || isInitializing) {
       return;
     }
 
-    // 标记开始初始化
     isInitializing = true;
 
     try {
-      // 检查职业表是否为空
       const checkQuery = `SELECT COUNT(*) as count FROM Professions`;
       const result = await executeQuery(checkQuery);
       
       if (result[0].count === 0) {
-        // 创建按顺序插入职业的 Promise 数组
         const professionEntries = Object.entries(PROFESSIONS);
         
         for (const [key, profession] of professionEntries) {
@@ -60,18 +58,12 @@ const DatabaseManager = () => {
             profession.description
           ]);
         }
-        
-        setDbStatus(prevStatus => 
-          `${prevStatus}; 成功初始化 ${professionEntries.length} 个职业数据`
-        );
       }
 
-      // 标记初始化完成
       professionInitComplete = true;
     } catch (err) {
       setError(`初始化职业数据失败: ${err.message}`);
     } finally {
-      // 无论成功失败，都标记初始化结束
       isInitializing = false;
     }
   };
@@ -105,13 +97,126 @@ const DatabaseManager = () => {
     }
   };
 
+  // 保存基础属性
+  const saveAttributes = async (characterId, attributes) => {
+    try {
+      const attributesSql = `
+        INSERT INTO Attributes (
+          character_id, strength, constitution, size, dexterity,
+          appearance, intelligence, power, education, luck
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          strength = VALUES(strength),
+          constitution = VALUES(constitution),
+          size = VALUES(size),
+          dexterity = VALUES(dexterity),
+          appearance = VALUES(appearance),
+          intelligence = VALUES(intelligence),
+          power = VALUES(power),
+          education = VALUES(education),
+          luck = VALUES(luck)
+      `;
+  
+      await executeQuery(attributesSql, [
+        characterId,
+        attributes.strength,
+        attributes.constitution,
+        attributes.size,
+        attributes.dexterity,
+        attributes.appearance,
+        attributes.intelligence,
+        attributes.power,
+        attributes.education,
+        attributes.luck
+      ]);
+  
+      return true;
+    } catch (error) {
+      console.error('保存属性失败:', error);
+      throw error;
+    }
+  };
+
+  // 保存技能
+  const saveSkills = async (characterId, skills) => {
+    try {
+      // 先保存技能
+      const skillsSql = `
+        INSERT INTO Skills (
+          character_id, Fighting, Firearms, Dodge, Mechanics,
+          Drive, Stealth, Investigate, Sleight_of_Hand,
+          Electronics, History, Science, Medicine, Occult,
+          Library_Use, Art, Persuade, Psychology
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          Fighting = VALUES(Fighting),
+          Firearms = VALUES(Firearms),
+          Dodge = VALUES(Dodge),
+          Mechanics = VALUES(Mechanics),
+          Drive = VALUES(Drive),
+          Stealth = VALUES(Stealth),
+          Investigate = VALUES(Investigate),
+          Sleight_of_Hand = VALUES(Sleight_of_Hand),
+          Electronics = VALUES(Electronics),
+          History = VALUES(History),
+          Science = VALUES(Science),
+          Medicine = VALUES(Medicine),
+          Occult = VALUES(Occult),
+          Library_Use = VALUES(Library_Use),
+          Art = VALUES(Art),
+          Persuade = VALUES(Persuade),
+          Psychology = VALUES(Psychology)
+      `;
+
+      await executeQuery(skillsSql, [
+        characterId,
+        skills.fighting || 0,
+        skills.firearms || 0,
+        skills.dodge || 0,
+        skills.mechanics || 0,
+        skills.drive || 0,
+        skills.stealth || 0,
+        skills.investigate || 0,
+        skills.sleightOfHand || 0,
+        skills.electronics || 0,
+        skills.history || 0,
+        skills.science || 0,
+        skills.medicine || 0,
+        skills.occult || 0,
+        skills.libraryUse || 0,
+        skills.art || 0,
+        skills.persuade || 0,
+        skills.psychology || 0
+      ]);
+
+      // 然后更新信用评级
+      const updateCreditSql = `
+        UPDATE Attributes 
+        SET credit_rating = ?
+        WHERE character_id = ?
+      `;
+      
+      await executeQuery(updateCreditSql, [
+        skills.creditRating || 0,
+        characterId
+      ]);
+
+      return true;
+    } catch (error) {
+      console.error('保存技能失败:', error);
+      throw error;
+    }
+  };
+
   // 组件加载时初始化
   useEffect(() => {
     const initialize = async () => {
       await initializeProfessions();
-      const newCharacterId = await createNewCharacter();
-      if (newCharacterId) {
-        console.log(`新角色已创建，ID: ${newCharacterId}`);
+      
+      // 从localStorage获取当前角色ID
+      const storedId = localStorage.getItem('currentCharacterId');
+      if (storedId) {
+        setCurrentCharacterId(parseInt(storedId));
       }
     };
     
@@ -122,7 +227,10 @@ const DatabaseManager = () => {
     currentCharacterId,
     dbStatus,
     error,
-    saveProfessionChoice
+    createNewCharacter,
+    saveProfessionChoice,
+    saveAttributes,
+    saveSkills
   };
 };
 

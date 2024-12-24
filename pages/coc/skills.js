@@ -6,13 +6,14 @@ import { AttributeBox } from '@components/coc/AttributeBox';
 import { skillCategories } from '@constants/skills';
 import { PROFESSIONS } from '@constants/professions';
 import { character, subscribeToCharacter } from '@utils/characterState';
+import DatabaseManager from '@components/coc/DatabaseManager';
 
 const STEP_VALUE = 5;
 const MAX_SKILL_VALUE = 90;
 
 const SkillsAssignment = () => {
   const router = useRouter();
-  const { profession: professionTitle } = router.query;
+  const { profession: professionTitle, characterId } = router.query;
   const profession = professionTitle && PROFESSIONS[professionTitle];
   const [professionalPoints, setProfessionalPoints] = useState(0);
   const [interestPoints, setInterestPoints] = useState(0);
@@ -24,6 +25,16 @@ const SkillsAssignment = () => {
     professional: 0,
     interest: 0
   });
+
+  const { saveSkills } = DatabaseManager();
+
+  // 当获取到characterId时，保存到localStorage
+  useEffect(() => {
+    if (characterId) {
+      console.log('从路由接收到角色ID:', characterId);
+      localStorage.setItem('currentCharacterId', characterId);
+    }
+  }, [characterId]);
 
   // 解析信用评级范围
   const getCreditRange = () => {
@@ -253,8 +264,7 @@ const SkillsAssignment = () => {
     };
   };
 
-
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const validation = validateCompletion();
     
     if (!validation.canComplete) {
@@ -264,9 +274,54 @@ const SkillsAssignment = () => {
         return;
       }
     }
-  
-    character.save();
-    router.push('/coc/background');
+
+    try {
+      // 优先使用路由参数中的characterId，如果没有再从localStorage获取
+      const currentCharacterId = characterId || localStorage.getItem('currentCharacterId');
+      if (!currentCharacterId) {
+        setShowError('找不到角色ID，请重新开始创建角色');
+        return;
+      }
+
+      // 准备技能数据，确保键名与数据库列名匹配
+      const skillsForDb = {
+        fighting: skills.fighting || 0,
+        firearms: skills.firearms || 0,
+        dodge: skills.dodge || 0,
+        mechanics: skills.mechanics || 0,
+        drive: skills.drive || 0,
+        stealth: skills.stealth || 0,
+        investigate: skills.investigate || 0,
+        sleightOfHand: skills.sleightOfHand || 0,
+        electronics: skills.electronics || 0,
+        history: skills.history || 0,
+        science: skills.science || 0,
+        medicine: skills.medicine || 0,
+        occult: skills.occult || 0,
+        libraryUse: skills.libraryUse || 0,
+        art: skills.art || 0,
+        persuade: skills.persuade || 0,
+        psychology: skills.psychology || 0,
+        creditRating: creditRating // 添加信用评级
+      };
+
+      // 保存到数据库
+      console.log('准备保存技能数据到数据库...');
+      console.log('角色ID:', currentCharacterId);
+      console.log('技能数据:', skillsForDb);
+
+      await saveSkills(parseInt(currentCharacterId), skillsForDb);
+      console.log('技能数据保存成功');
+
+      // 保存到前端状态
+      character.save();
+      
+      // 跳转到下一页
+      router.push('/coc/background');
+    } catch (error) {
+      console.error('保存技能失败:', error);
+      setShowError(`保存失败: ${error.message}`);
+    }
   };
 
   const isInProfessionSkills = (skillLabel) => {
@@ -280,6 +335,7 @@ const SkillsAssignment = () => {
       </div>
     );
   }
+
   const validation = validateCompletion();
   return (
     <>

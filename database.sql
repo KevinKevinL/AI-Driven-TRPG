@@ -29,7 +29,7 @@ CREATE TABLE `DerivedAttributes` (
   `interestPoints` INTEGER,
   `hitPoints` INTEGER,
   `moveRate` INTEGER,
-  `damageBonus` INTEGER,
+  `damageBonus` TEXT,
   `build` INTEGER,
   `professionalPoints` INTEGER
 );
@@ -121,9 +121,9 @@ ALTER TABLE `CharacterEquipment` COMMENT = 'This table represents the relationsh
 
 ALTER TABLE `Characters` ADD FOREIGN KEY (`profession_id`) REFERENCES `Professions` (`id`);
 
-ALTER TABLE `Attributes` ADD FOREIGN KEY (`character_id`) REFERENCES `Characters` (`id`);
+ALTER TABLE `Attributes` ADD UNIQUE KEY `unique_character` (`character_id`);
 
-ALTER TABLE `DerivedAttributes` ADD FOREIGN KEY (`character_id`) REFERENCES `Characters` (`id`);
+ALTER TABLE `DerivedAttributes` ADD UNIQUE KEY `unique_character` (`character_id`);
 
 ALTER TABLE `Skills` ADD FOREIGN KEY (`character_id`) REFERENCES `Characters` (`id`);
 

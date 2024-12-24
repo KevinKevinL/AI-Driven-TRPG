@@ -163,23 +163,40 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 确保表已创建
-    await initTables();
-
     const { query, params } = req.body;
-    console.log('执行查询:', query);
-    console.log('参数:', params);
+    console.log('服务器收到查询:', query);
+    console.log('服务器收到参数:', params);
 
-    const [results] = await pool.execute(query, params);
-    console.log('查询执行成功, 结果:', results);
-    res.status(200).json({ results });
+    try {
+      const [results] = await pool.execute(query, params);
+      console.log('查询执行成功, 结果:', results);
+      res.status(200).json({ results });
+    } catch (dbError) {
+      console.error('SQL执行错误:', {
+        message: dbError.message,
+        code: dbError.code,
+        sqlState: dbError.sqlState,
+        sql: dbError.sql,
+        values: params
+      });
+      
+      // 返回更详细的错误信息
+      res.status(500).json({ 
+        error: dbError.message,
+        sqlError: {
+          code: dbError.code,
+          state: dbError.sqlState,
+          sql: query,
+          params: params
+        }
+      });
+    }
   } catch (error) {
-    console.error('数据库错误:', error);
+    console.error('服务器错误:', error);
     res.status(500).json({ 
-      error: error.message,
-      code: error.code,
-      errno: error.errno,
-      sqlMessage: error.sqlMessage
+      error: '服务器错误',
+      details: error.message,
+      stack: error.stack
     });
   }
 }

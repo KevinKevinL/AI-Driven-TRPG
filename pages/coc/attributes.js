@@ -9,8 +9,11 @@ import { attributeMapping, derivedAttributes } from '@constants/characterConfig'
 import { skillCategories } from '@constants/skills';
 import { PROFESSIONS } from '@constants/professions';
 import { character } from '@utils/characterState';
+import DatabaseManager from '@components/coc/DatabaseManager';
+
 
 const AttributesGenerator = () => {
+  const [dbStatus, setDbStatus] = useState('');
   const [attributes, setAttributes] = useState(null);
   const [isRolling, setIsRolling] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -67,13 +70,72 @@ const AttributesGenerator = () => {
     }, 800);
   };
 
-  const handleContinue = () => {
-    if (attributes) {
-      character.save();
+  const {
+    currentCharacterId,
+    saveAttributes
+  } = DatabaseManager();
+
+  const handleContinue = async () => {
+    console.log('点击继续按钮');
+    console.log('currentCharacterId:', currentCharacterId);
+    console.log('attributes 数据:', JSON.stringify(attributes, null, 2));
+    
+    if (attributes && currentCharacterId) {
+      try {
+        console.log('开始保存属性');
+        
+        // 调试：打印实际执行的 SQL
+        const sql = `
+          INSERT INTO Attributes (
+            character_id, strength, constitution, size, dexterity,
+            appearance, intelligence, power, education, luck
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+            strength = VALUES(strength),
+            constitution = VALUES(constitution),
+            size = VALUES(size),
+            dexterity = VALUES(dexterity),
+            appearance = VALUES(appearance),
+            intelligence = VALUES(intelligence),
+            power = VALUES(power),
+            education = VALUES(education),
+            luck = VALUES(luck)
+        `;
+        console.log('SQL语句:', sql);
+        console.log('SQL参数:', [
+          currentCharacterId,
+          attributes.strength,
+          attributes.constitution,
+          attributes.size,
+          attributes.dexterity,
+          attributes.appearance,
+          attributes.intelligence,
+          attributes.power,
+          attributes.education,
+          attributes.luck
+        ]);
+        
+        await saveAttributes(currentCharacterId, attributes);
+        console.log('属性保存成功，准备跳转');
+        
+      // 传递必要的信息到技能页面
       router.push({
         pathname: '/coc/skills',
-        query: { profession: professionTitle }
+        query: { 
+            profession: professionTitle,
+            characterId: currentCharacterId // 确保传递角色ID
+        }
       });
+      } catch (error) {
+        console.error('保存属性失败:', error);
+        // 显示错误信息在界面上
+        setDbStatus(`保存失败: ${error.message}`);
+      }
+    } else {
+      console.log('缺少必要数据:',
+        !attributes ? 'attributes为空' : '',
+        !currentCharacterId ? 'characterId为空' : ''
+      );
     }
   };
 
