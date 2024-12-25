@@ -132,3 +132,5 @@ ALTER TABLE `Backgrounds` ADD FOREIGN KEY (`character_id`) REFERENCES `Character
 ALTER TABLE `CharacterEquipment` ADD FOREIGN KEY (`character_id`) REFERENCES `Characters` (`id`);
 
 ALTER TABLE `CharacterEquipment` ADD FOREIGN KEY (`equipment_id`) REFERENCES `Equipment` (`id`);
+
+ALTER TABLE `Backgrounds` ADD UNIQUE KEY `unique_character` (`character_id`);
