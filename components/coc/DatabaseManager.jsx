@@ -208,6 +208,56 @@ const DatabaseManager = () => {
     }
   };
 
+  //加载角色背景
+  const loadBackground = async (characterId) => {
+    try {
+      const query = `
+        SELECT beliefs, important_people, reasons, places, possessions, traits, keylink 
+        FROM Backgrounds 
+        WHERE character_id = ?
+      `;
+      const results = await executeQuery(query, [characterId]);
+      return results.length > 0 ? results[0] : null;
+    } catch (error) {
+      console.error('加载背景数据失败:', error);
+      throw new Error('加载背景数据失败');
+    }
+  };
+  
+  //保存背景
+  const saveBackground = async (characterId, background) => {
+    try {
+      const query = `
+        INSERT INTO Backgrounds (
+          character_id, beliefs, important_people, reasons, places, possessions, traits, keylink
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+          beliefs = VALUES(beliefs),
+          important_people = VALUES(important_people),
+          reasons = VALUES(reasons),
+          places = VALUES(places),
+          possessions = VALUES(possessions),
+          traits = VALUES(traits),
+          keylink = VALUES(keylink)
+      `;
+      const params = [
+        characterId,
+        background.beliefs,
+        background.important_people,
+        background.reasons,
+        background.places,
+        background.possessions,
+        background.traits,
+        background.keylink,
+      ];
+      await executeQuery(query, params);
+      return true;
+    } catch (error) {
+      console.error('保存背景数据失败:', error);
+      throw new Error('保存背景数据失败');
+    }
+  };
+  
   // 组件加载时初始化
   useEffect(() => {
     const initialize = async () => {
@@ -230,7 +280,9 @@ const DatabaseManager = () => {
     createNewCharacter,
     saveProfessionChoice,
     saveAttributes,
-    saveSkills
+    saveSkills,
+    loadBackground,
+    saveBackground,
   };
 };
 
