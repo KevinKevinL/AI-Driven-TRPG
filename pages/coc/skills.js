@@ -317,7 +317,14 @@ const SkillsAssignment = () => {
       character.save();
       
       // 跳转到下一页
-      router.push('/coc/background');
+      // router.push('/coc/background');
+      router.push({
+        pathname: "/coc/background",
+        query: { 
+            profession: professionTitle,
+            characterId: currentCharacterId // 确保传递角色ID
+        }
+      });
     } catch (error) {
       console.error('保存技能失败:', error);
       setShowError(`保存失败: ${error.message}`);
