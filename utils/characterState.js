@@ -66,14 +66,14 @@ class Character {
     // 设置背景信息
     setBackground(background) {
       // 将背景信息拼接成完整的描述写入 backstory
-      const { belief, importantPerson, reason, place, possession, trait } = background;
+      const { beliefs, important_people, reasons, places, possessions, traits } = background;
       const backstoryDescription = `
-        Belief: ${belief || 'Undefined'}
-        Important Person: ${importantPerson || 'Undefined'}
-        Reason: ${reason || 'Undefined'}
-        Significant Place: ${place || 'Undefined'}
-        Treasured Possession: ${possession || 'Undefined'}
-        Trait: ${trait || 'Undefined'}
+        Belief: ${beliefs || 'Undefined'}
+        Important Person: ${important_people || 'Undefined'}
+        Reason: ${reasons || 'Undefined'}
+        Significant Place: ${places || 'Undefined'}
+        Treasured Possession: ${possessions || 'Undefined'}
+        Trait: ${traits || 'Undefined'}
       `;
       this.backstory = backstoryDescription.trim();
     }
@@ -168,7 +168,7 @@ class Character {
     validateBackground() {
         if (!this.backstory) return false;
 
-        const keys = ["belief", "importantPerson", "reason", "place", "possession", "trait"];
+        const keys = ["beliefs", "important_people", "reasons", "places", "possessions", "traits"];
         const backgroundValues = keys.map(key => {
             const match = new RegExp(`${key}:\\s*(.*)`, 'i').exec(this.backstory);
             return match ? match[1] : null;
