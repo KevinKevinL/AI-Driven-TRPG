@@ -8,54 +8,52 @@ import { AttributeBox } from '@components/coc/AttributeBox';
 import { skillCategories } from '@constants/skills';
 import { PROFESSIONS } from '@constants/professions';
 import { character } from "@utils/characterState"; // 全局状态管理对象
+import DatabaseManager from "@components/coc/DatabaseManager"; // 引入数据库管理
 
 const BackgroundPage = () => {
+  const { loadBackground, saveBackground } = DatabaseManager(); // 调用数据库方法
   const [selectedBackground, setSelectedBackground] = useState({
-    belief: null,
-    importantPerson: null,
-    reason: null,
-    place: null,
-    possession: null,
-    trait: null,
+    beliefs: null,
+    important_people: null,
+    reasons: null,
+    places: null,
+    possessions: null,
+    traits: null,
   });
   const [keyConnection, setKeyConnection] = useState(null); // 关键背景连接
   const [isRolling, setIsRolling] = useState(false);
   const router = useRouter();
-  const { profession: professionTitle } = router.query;
+  const { profession: professionTitle, characterId } = router.query;
   const profession = professionTitle && PROFESSIONS[professionTitle];
   const [validationErrors, setValidationErrors] = useState([]); 
 
-  // Load background from character state on mount
+  // 从数据库加载背景数据
   useEffect(() => {
-    if (!profession) return;
+    // if (!characterId) return;
 
-    const savedBackground = character.backstory
-      ? parseBackstory(character.backstory)
-      : {
-        belief: null,
-        importantPerson: null,
-        reason: null,
-        place: null,
-        possession: null,
-        trait: null,
-      };
-    setSelectedBackground(savedBackground);
-    setKeyConnection(character.keyConnection || null);
-  }, [profession]);
-  console.log("router.query:", router.query);
-  console.log("professionTitle:", professionTitle);
-  console.log("profession:", profession);
+    const fetchBackground = async () => {
+      if(characterId){
+        try {
+          const background = await loadBackground(characterId);
+          if (background) {
+            setSelectedBackground({
+              beliefs: background.beliefs || "",
+              important_people: background.important_people || "",
+              reasons: background.reasons || "",
+              places: background.places || "",
+              possessions: background.possessions || "",
+              traits: background.traits || "",
+            });
+            setKeyConnection(background.keylink || null);
+          }
+        } catch (error) {
+          console.error("加载背景失败:", error);
+        }
+      }
+    };
 
-  // Parse the backstory string to extract the individual elements
-  const parseBackstory = (backstory) => {
-    const lines = backstory.split("\n").map((line) => line.trim());
-    const keys = ["belief", "importantPerson", "reason", "place", "possession", "trait"];
-    const parsed = {};
-    lines.forEach((line, index) => {
-      parsed[keys[index]] = line.split(":")[1]?.trim() || null;
-    });
-    return parsed;
-  };
+    fetchBackground();
+  }, [characterId]);
 
   // 验证逻辑
   const validateSelection = () => {
@@ -77,6 +75,10 @@ const BackgroundPage = () => {
     const validation = validateSelection();
     setValidationErrors(validation.errors); // 更新错误列表
   }, [selectedBackground, keyConnection]);
+  // useEffect(() => {
+  //   const validation = validateSelection();
+  //   setValidationErrors(validation.errors); // 更新错误列表
+  // }, [JSON.stringify(selectedBackground), keyConnection]);
 
   // 为所有类别随机选择选项
   const rollAll = () => {
@@ -101,12 +103,27 @@ const BackgroundPage = () => {
       setValidationErrors(validation.errors);
       return;
     }
-    character.setBackground(selectedBackground); // 确保背景选择持久化
-    character.setKeyConnection(keyConnection); // 使用封装方法保存关键连接
-    character.save(); // 保存背景数据
-    console.log("Finalized Background:", character.export().backstory); // 调试输出背景信息
-    console.log("Key Connection:", character.getKeyConnection()); // 调试输出关键连接
-    router.push("/coc/summary"); // 跳转到下一页面
+    try {
+      const currentCharacterId = characterId || localStorage.getItem('currentCharacterId');
+      if (!currentCharacterId) {
+        setShowError('找不到角色ID，请重新开始创建角色');
+        return;
+      }
+
+      await saveBackground(currentCharacterId, {
+        beliefs: selectedBackground.beliefs,
+        important_people: selectedBackground.important_people,
+        reasons: selectedBackground.reasons,
+        places: selectedBackground.places,
+        possessions: selectedBackground.possessions,
+        traits: selectedBackground.traits,
+        keylink: keyConnection,
+      });
+      console.log("背景保存成功");
+      router.push("/coc/summary");
+    } catch (error) {
+      console.error("保存背景失败:", error);
+    }
   };
 
   // Handle key connection selection
@@ -128,7 +145,7 @@ const BackgroundPage = () => {
       <div className="min-h-screen bg-[#0a0d11] py-10">
         <div className="max-w-4xl mx-auto px-6">
           <Link
-            href={`/coc/skills?profession=${professionTitle}`}
+            href={`/coc/skills?profession=${professionTitle}&characterId=${characterId}`}
             className="inline-block mb-6 text-emerald-400 hover:text-emerald-300 
                      transition-colors font-lovecraft tracking-wider"
           >
@@ -179,7 +196,7 @@ const BackgroundPage = () => {
                 <div className="flex justify-between items-center mb-2">
                   <h2 className="text-lg font-bold text-emerald-400 font-lovecraft capitalize">
                     {category === "beliefs" && "信念"}
-                    {category === "importantPeople" && "重要之人"}
+                    {category === "important_people" && "重要之人"}
                     {category === "reasons" && "原因"}
                     {category === "places" && "意义非凡之地"}
                     {category === "possessions" && "宝贵之物"}
@@ -206,8 +223,13 @@ const BackgroundPage = () => {
                   onChange={(e) =>
                     setSelectedBackground((prev) => {
                       const newBackground = { ...prev, [category]: e.target.value };
+                      setSelectedBackground(newBackground); // 更新本地状态
                       character.setBackground(newBackground);
+                      character.save(); // Save to localStorage
                       return newBackground;
+                      // // 验证更新后的状态
+                      // const validation = validateSelection(newBackground, keyConnection);
+                      // setValidationErrors(validation.errors);
                     })
                   }
                 >
