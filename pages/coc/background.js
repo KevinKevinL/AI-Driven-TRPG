@@ -97,7 +97,7 @@ const BackgroundPage = () => {
     }, 1000);
   };
 
-  const handleFinalize = () => {
+  const handleFinalize = async() => {
     const validation = validateSelection();
     if (!validation.isValid) {
       setValidationErrors(validation.errors);

@@ -39,6 +39,7 @@ const createLock = () => {
 const lock = createLock();
 let tablesInitialized = false;
 
+/*
 // 初始化数据库表
 async function initTables() {
   if (tablesInitialized) {
@@ -155,6 +156,7 @@ async function initTables() {
     lock.release();
   }
 }
+*/
 
 // API 路由处理器
 export default async function handler(req, res) {
