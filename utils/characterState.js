@@ -18,6 +18,7 @@ class Character {
       this.backstory = '';
       this.notes = '';
       this.keyConnection = null; // 关键背景连接
+      this.keyConnectionDetails = null; // 关键背景连接的详细信息
     }
   
     // 设置职业
@@ -66,26 +67,45 @@ class Character {
     // 设置背景信息
     setBackground(background) {
       // 将背景信息拼接成完整的描述写入 backstory
-      const { beliefs, important_people, reasons, places, possessions, traits } = background;
+      const {
+        beliefs, beliefs_details,
+        important_people, important_people_details,
+        reasons, reasons_details,
+        places, places_details,
+        possessions, possessions_details,
+        traits, traits_details,
+      } = background;
       const backstoryDescription = `
-        Belief: ${beliefs || 'Undefined'}
-        Important Person: ${important_people || 'Undefined'}
-        Reason: ${reasons || 'Undefined'}
-        Significant Place: ${places || 'Undefined'}
-        Treasured Possession: ${possessions || 'Undefined'}
-        Trait: ${traits || 'Undefined'}
-      `;
+        beliefs: ${beliefs || 'Undefined'}
+        beliefs_details: ${beliefs_details || 'No details provided'}
+        important_people: ${important_people || 'Undefined'}
+        important_people_details: ${important_people_details || 'No details provided'}
+        reasons: ${reasons || 'Undefined'}
+        reasons_details: ${reasons_details || 'No details provided'}
+        places: ${places || 'Undefined'}
+        places_details: ${places_details || 'No details provided'}
+        possessions: ${possessions || 'Undefined'}
+        possessions_details: ${possessions_details || 'No details provided'}
+        traits: ${traits || 'Undefined'}
+        traits_details: ${traits_details || 'No details provided'}
+    `;
       this.backstory = backstoryDescription.trim();
     }
 
     // 设置关键背景连接
-    setKeyConnection(keyConnection) {
+    setKeyConnection(keyConnection, keyConnectionDetails) {
         this.keyConnection = keyConnection;
+        this.keyConnectionDetails = keyConnectionDetails;
     }
 
     // 获取当前的关键背景连接
     getKeyConnection() {
-        return this.keyConnection;
+        // return this.keyConnection;
+        return {
+          keyConnection: this.keyConnection,
+          keyConnectionDetails: this.keyConnectionDetails,
+        };
+      
     }
   
     // 添加笔记
@@ -104,7 +124,8 @@ class Character {
         equipment: this.equipment,
         backstory: this.backstory,
         notes: this.notes,
-        keyConnection: this.keyConnection
+        keyConnection: this.keyConnection,
+        keyConnectionDetails: this.keyConnectionDetails, // 导出关键背景连接详细信息
       };
     }
   
@@ -119,6 +140,7 @@ class Character {
       if (data.backstory) this.backstory = data.backstory;
       if (data.notes) this.notes = data.notes;
       if (data.keyConnection) this.keyConnection = data.keyConnection;
+      if (data.keyConnectionDetails) this.keyConnectionDetails = data.keyConnectionDetails; // 导入关键背景连接详细信息
     }
   
     // 将角色数据保存到localStorage
@@ -166,7 +188,7 @@ class Character {
 
     // 验证背景是否完整
     validateBackground() {
-        if (!this.backstory) return false;
+        if (!this.backstory || !this.keyConnection || !this.keyConnectionDetails) return false;
 
         const keys = ["beliefs", "important_people", "reasons", "places", "possessions", "traits"];
         const backgroundValues = keys.map(key => {
@@ -174,7 +196,7 @@ class Character {
             return match ? match[1] : null;
         });
 
-        return backgroundValues.every(value => value && value.trim() !== "") && !!this.keyConnection;
+        return backgroundValues.every(value => value && value.trim() !== "");
     }
   
     // 清除所有数据
@@ -195,6 +217,7 @@ class Character {
       this.backstory = '';
       this.notes = '';
       this.keyConnection = null;
+      this.keyConnectionDetails = null;
     }
   }
   
