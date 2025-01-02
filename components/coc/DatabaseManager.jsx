@@ -212,7 +212,14 @@ const DatabaseManager = () => {
   const loadBackground = async (characterId) => {
     try {
       const query = `
-        SELECT beliefs, important_people, reasons, places, possessions, traits, keylink 
+        SELECT 
+          beliefs, beliefs_details, 
+          important_people, important_people_details, 
+          reasons, reasons_details, 
+          places, places_details, 
+          possessions, possessions_details, 
+          traits, traits_details, 
+          keylink, keylink_details 
         FROM Backgrounds 
         WHERE character_id = ?
       `;
@@ -229,26 +236,40 @@ const DatabaseManager = () => {
     try {
       const query = `
         INSERT INTO Backgrounds (
-          character_id, beliefs, important_people, reasons, places, possessions, traits, keylink
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          character_id, 
+          beliefs, beliefs_details, 
+          important_people, important_people_details, 
+          reasons, reasons_details, 
+          places, places_details, 
+          possessions, possessions_details, 
+          traits, traits_details, 
+          keylink, keylink_details
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE 
           beliefs = VALUES(beliefs),
+          beliefs_details = VALUES(beliefs_details),
           important_people = VALUES(important_people),
+          important_people_details = VALUES(important_people_details),
           reasons = VALUES(reasons),
+          reasons_details = VALUES(reasons_details),
           places = VALUES(places),
+          places_details = VALUES(places_details),
           possessions = VALUES(possessions),
+          possessions_details = VALUES(possessions_details),
           traits = VALUES(traits),
-          keylink = VALUES(keylink)
+          traits_details = VALUES(traits_details),
+          keylink = VALUES(keylink),
+          keylink_details = VALUES(keylink_details)
       `;
       const params = [
         characterId,
-        background.beliefs,
-        background.important_people,
-        background.reasons,
-        background.places,
-        background.possessions,
-        background.traits,
-        background.keylink,
+        background.beliefs, background.beliefs_details,
+        background.important_people, background.important_people_details,
+        background.reasons, background.reasons_details,
+        background.places, background.places_details,
+        background.possessions, background.possessions_details,
+        background.traits, background.traits_details,
+        background.keylink, background.keylink_details, // 新增 keylink_details
       ];
       await executeQuery(query, params);
       return true;
