@@ -14,11 +14,17 @@ const BackgroundPage = () => {
   const { loadBackground, saveBackground } = DatabaseManager(); // 调用数据库方法
   const [selectedBackground, setSelectedBackground] = useState({
     beliefs: null,
+    beliefs_details: "",
     important_people: null,
+    important_people_details: "",
     reasons: null,
+    reasons_details: "",
     places: null,
+    places_details: "",
     possessions: null,
+    possessions_details: "",
     traits: null,
+    traits_details: "",
   });
   const [keyConnection, setKeyConnection] = useState(null); // 关键背景连接
   const [isRolling, setIsRolling] = useState(false);
@@ -29,8 +35,6 @@ const BackgroundPage = () => {
 
   // 从数据库加载背景数据
   useEffect(() => {
-    // if (!characterId) return;
-
     const fetchBackground = async () => {
       if(characterId){
         try {
@@ -38,11 +42,17 @@ const BackgroundPage = () => {
           if (background) {
             setSelectedBackground({
               beliefs: background.beliefs || "",
+              beliefs_details: background.beliefs_details || "",
               important_people: background.important_people || "",
+              important_people_details: background.important_people_details || "",
               reasons: background.reasons || "",
+              reasons_details: background.reasons_details || "",
               places: background.places || "",
+              places_details: background.places_details || "",
               possessions: background.possessions || "",
+              possessions_details: background.possessions_details || "",
               traits: background.traits || "",
+              traits_details: background.traits_details || "",
             });
             setKeyConnection(background.keylink || null);
           }
@@ -57,13 +67,26 @@ const BackgroundPage = () => {
 
   // 验证逻辑
   const validateSelection = () => {
-    const allSelected = Object.values(selectedBackground).every(
-      (value) => value && value.trim() !== ""
+    const mainFields = ["beliefs", "important_people", "reasons", "places", "possessions", "traits"];
+    // const allSelected = Object.values(selectedBackground).every(
+    //   (value) => value && value.trim() !== ""
+    // );
+    // 验证每个主要条目是否已选择
+    const allSelected = mainFields.every((field) => 
+      selectedBackground[field] && selectedBackground[field].trim() !== ""
     );
     const hasKeyConnection = keyConnection !== null;
+    const keyConnectionDetailsField = `${keyConnection}_details`;
+    const hasKeyConnectionDetails =
+      keyConnection &&
+      selectedBackground[keyConnection] &&
+      selectedBackground[keyConnectionDetailsField] &&
+      selectedBackground[keyConnectionDetailsField].trim() !== "";
+
     const errors = [];
     if (!allSelected) errors.push("所有条目必须选择内容");
     if (!hasKeyConnection) errors.push("必须选择一个关键链接");
+    if (!hasKeyConnectionDetails) errors.push("关键链接的详细信息必须填写");
 
     return {
       isValid: errors.length === 0,
@@ -89,6 +112,7 @@ const BackgroundPage = () => {
         const options = BACKGROUND_OPTIONS[category];
         const randomIndex = DiceSystem.roll(1, options.length) - 1;
         newBackground[category] = options[randomIndex];
+        newBackground[`${category}_details`] = ""; // 清空 details
       });
       setSelectedBackground(newBackground);
       character.setBackground(newBackground); // Save to backstory
@@ -112,12 +136,19 @@ const BackgroundPage = () => {
 
       await saveBackground(currentCharacterId, {
         beliefs: selectedBackground.beliefs,
+        beliefs_details: selectedBackground.beliefs_details, // 信念的详细信息
         important_people: selectedBackground.important_people,
-        reasons: selectedBackground.reasons,
-        places: selectedBackground.places,
-        possessions: selectedBackground.possessions,
-        traits: selectedBackground.traits,
+        important_people_details: selectedBackground.important_people_details, // 重要之人的详细信息
+        reasons: selectedBackground.reasons, // 原因
+        reasons_details: selectedBackground.reasons_details, // 原因的详细信息
+        places: selectedBackground.places, // 意义非凡之地
+        places_details: selectedBackground.places_details, // 意义非凡之地的详细信息
+        possessions: selectedBackground.possessions, // 宝贵之物
+        possessions_details: selectedBackground.possessions_details, // 宝贵之物的详细信息
+        traits: selectedBackground.traits, // 特质
+        traits_details: selectedBackground.traits_details, // 特质的详细信息
         keylink: keyConnection,
+        keylink_details: selectedBackground[`${keyConnection}_details`],
       });
       console.log("背景保存成功");
       router.push("/coc/summary");
@@ -240,6 +271,20 @@ const BackgroundPage = () => {
                     </option>
                   ))}
                 </select>
+
+                {/* 详细信息补充框 */}
+                <input
+                  type="text"
+                  placeholder="补充详细信息..."
+                  className="w-full bg-slate-700 text-emerald-400 font-lovecraft rounded px-2 py-1 mt-2"
+                  value={selectedBackground[`${category}_details`] || ""}
+                  onChange={(e) =>
+                    setSelectedBackground((prev) => ({
+                      ...prev,
+                      [`${category}_details`]: e.target.value,
+                    }))
+                  }
+                />
               </div>
             ))}
           </div>
