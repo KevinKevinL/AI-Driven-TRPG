@@ -134,3 +134,13 @@ ALTER TABLE `CharacterEquipment` ADD FOREIGN KEY (`character_id`) REFERENCES `Ch
 ALTER TABLE `CharacterEquipment` ADD FOREIGN KEY (`equipment_id`) REFERENCES `Equipment` (`id`);
 
 ALTER TABLE `Backgrounds` ADD UNIQUE KEY `unique_character` (`character_id`);
+
+ALTER TABLE `Backgrounds`
+ADD COLUMN `beliefs_details` TEXT AFTER `beliefs`,
+ADD COLUMN `important_people_details` TEXT AFTER `important_people`,
+ADD COLUMN `reasons_details` TEXT AFTER `reasons`,
+ADD COLUMN `places_details` TEXT AFTER `places`,
+ADD COLUMN `possessions_details` TEXT AFTER `possessions`,
+ADD COLUMN `traits_details` TEXT AFTER `traits`;
+ADD COLUMN `keylink_details` TEXT AFTER `keylink`;
+
