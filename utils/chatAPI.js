@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // GPT-4o-mini API 配置
 const GPT_API_URL = "https://api.openai.com/v1/chat/completions";
-const GPT_API_KEY = process.env.OPENAI_API_KEY; // 从环境变量读取 API 密钥
+const GPT_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY; // 从环境变量读取 API 密钥
 
 export const fetchChatGPTResponse = async (messages) => {
   try {

@@ -1,7 +1,7 @@
 // DatabaseManager.jsx
 import React, { useEffect, useState } from 'react';
 import { PROFESSIONS } from '@constants/professions';
-import { executeQuery } from '@/utils/db/executeQuery';
+import { executeQuery } from '@utils/db/executeQuery';
 
 // 使用模块级变量来确保在所有组件实例中共享状态
 let isInitializing = false;
@@ -279,6 +279,114 @@ const DatabaseManager = () => {
     }
   };
   
+// 获取地图相关的事件
+const getMapEvents = async (mapId) => {
+  try {
+    const query = `
+      SELECT event_ids 
+      FROM Maps 
+      WHERE id = ?
+    `;
+    const results = await executeQuery(query, [mapId]);
+    
+    if (!results || results.length === 0) {
+      throw new Error(`未找到地图ID: ${mapId}`);
+    }
+    
+    // 将逗号分隔的字符串转换为数组
+    const eventIdsString = results[0].event_ids;
+    return eventIdsString ? eventIdsString.split(',').map(id => parseInt(id)) : [];
+  } catch (error) {
+    console.error('获取地图事件失败:', error);
+    throw error;
+  }
+};
+
+// 获取事件详情
+const getEvents = async (eventIds) => {
+  try {
+    if (!eventIds || eventIds.length === 0) {
+      return [];
+    }
+
+    const query = `
+      SELECT id, event_info, rate, if_happened
+      FROM Events 
+      WHERE id IN (${eventIds.join(',')})
+    `;
+    const results = await executeQuery(query, []);
+    
+    if (!results || results.length === 0) {
+      return [];
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('获取事件详情失败:', error);
+    throw error;
+  }
+};
+
+// 更新事件状态
+const updateEventStatus = async (eventIds, happened = true) => {
+  try {
+    if (!eventIds || eventIds.length === 0) return;
+
+    const query = `
+      UPDATE Events 
+      SET if_happened = ?
+      WHERE id IN (${eventIds.join(',')})
+    `;
+    await executeQuery(query, [happened ? 1 : 0]);
+    
+    return true;
+  } catch (error) {
+    console.error('更新事件状态失败:', error);
+    throw error;
+  }
+};
+
+// 生成随机事件
+const generateRandomEvents = async (mapId) => {
+  try {
+    // 1. 获取地图关联的事件ID
+    const eventIds = await getMapEvents(mapId);
+    
+    // 2. 获取事件详情
+    const events = await getEvents(eventIds);
+    
+    // 3. 根据概率判断事件是否发生
+    const occurredEvents = events.filter(event => {
+      const probability = event.rate / 100;
+      return Math.random() < probability;
+    });
+    
+    // 4. 更新发生的事件状态
+    if (occurredEvents.length > 0) {
+      const occurredEventIds = occurredEvents.map(event => event.id);
+      await updateEventStatus(occurredEventIds, true);
+    }
+    
+    return occurredEvents;
+  } catch (error) {
+    console.error('生成随机事件失败:', error);
+    throw error;
+  }
+};
+
+// 重置事件状态
+const resetEventStatus = async (mapId) => {
+  try {
+    const eventIds = await getMapEvents(mapId);
+    await updateEventStatus(eventIds, false);
+    return true;
+  } catch (error) {
+    console.error('重置事件状态失败:', error);
+    throw error;
+  }
+};
+
+
   // 组件加载时初始化
   useEffect(() => {
     const initialize = async () => {
@@ -304,6 +412,10 @@ const DatabaseManager = () => {
     saveSkills,
     loadBackground,
     saveBackground,
+    generateRandomEvents,
+    getMapEvents,
+    getEvents,
+    resetEventStatus,
   };
 };
 

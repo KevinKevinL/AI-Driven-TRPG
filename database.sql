@@ -2,14 +2,15 @@ create database characters;
 use characters;
 
 CREATE TABLE `Characters` (
-  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  `id` CHAR(64) PRIMARY KEY,
   `name` TEXT,
   `profession_id` INTEGER,
-  `description` TEXT
+  `description` TEXT,
+  `if_npc` TINYINT(1)
 );
 
 CREATE TABLE `Attributes` (
-  `character_id` INTEGER,
+  `character_id` CHAR(64),
   `strength` INTEGER,
   `constitution` INTEGER,
   `size` INTEGER,
@@ -23,7 +24,7 @@ CREATE TABLE `Attributes` (
 );
 
 CREATE TABLE `DerivedAttributes` (
-  `character_id` INTEGER,
+  `character_id` CHAR(64),
   `sanity` INTEGER,
   `magicPoints` INTEGER,
   `interestPoints` INTEGER,
@@ -35,7 +36,7 @@ CREATE TABLE `DerivedAttributes` (
 );
 
 CREATE TABLE `Skills` (
-  `character_id` INTEGER,
+  `character_id` CHAR(64),
   `Fighting` INTEGER,
   `Firearms` INTEGER,
   `Dodge` INTEGER,
@@ -62,7 +63,7 @@ CREATE TABLE `Professions` (
 );
 
 CREATE TABLE `Backgrounds` (
-  `character_id` INTEGER,
+  `character_id` CHAR(64),
   `beliefs` TEXT,
   `important_people` TEXT,
   `reasons` TEXT,
@@ -82,37 +83,35 @@ CREATE TABLE `Equipment` (
 );
 
 CREATE TABLE `CharacterEquipment` (
-  `character_id` INTEGER,
+  `character_id` CHAR(64),
   `equipment_id` INTEGER,
   `on_bag` bool,
   `quantity` INTEGER DEFAULT 1
 );
 
 CREATE TABLE Maps (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 地图的唯一ID，自增主键
-  map_info TEXT,                         -- 地图信息描述
-  items TEXT,                            -- 地图上的物品列表（逗号分隔）
-  accessible_locations TEXT              -- 可达之地（逗号分隔的地图ID）
-);
-
-CREATE TABLE MapsEventsCharacters (
-  map_id INTEGER,                        -- 外键，关联到 Maps 表的地图ID
-  event_id INTEGER,                      -- 外键，关联到 Events 表的事件ID
-  character_id INTEGER,                  -- 外键，关联到 Characters 表的人物ID
-  FOREIGN KEY (map_id) REFERENCES Maps (id),
-  FOREIGN KEY (event_id) REFERENCES Events (id),
-  FOREIGN KEY (character_id) REFERENCES Characters (id)
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,  -- 地图的唯一ID，自增主键
+    first_entry_info TEXT,
+    map_info TEXT,                         -- 地图信息描述
+    items TEXT,                            -- 地图上的物品列表（逗号分隔）
+    accessible_locations TEXT,              -- 可达之地（逗号分隔的地图ID）
+    event_ids TEXT,
+    character_ids TEXT
 );
 
 CREATE TABLE Events (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 事件的唯一ID，自增主键
+  id INTEGER PRIMARY KEY AUTO_INCREMENT,  -- 事件的唯一ID，自增主键
   event_info TEXT,                       -- 事件的信息描述
-  time DATETIME,                         -- 事件发生的时间
+  rate INTEGER,                         -- 事件概率
+  character_ids TEXT,
+  map_ids TEXT,
+  if_unique TINYINT(1),
   afterevents INTEGER,                   -- 后续事件的ID
   beforeevents INTEGER,                  -- 先决事件的ID
   FOREIGN KEY (afterevents) REFERENCES Events (id),
   FOREIGN KEY (beforeevents) REFERENCES Events (id)
 );
+
 
 
 ALTER TABLE `Equipment` COMMENT = 'This table stores information about equipment, including name, skill, price, damage, and ammo capacity.';
@@ -141,6 +140,6 @@ ADD COLUMN `important_people_details` TEXT AFTER `important_people`,
 ADD COLUMN `reasons_details` TEXT AFTER `reasons`,
 ADD COLUMN `places_details` TEXT AFTER `places`,
 ADD COLUMN `possessions_details` TEXT AFTER `possessions`,
-ADD COLUMN `traits_details` TEXT AFTER `traits`;
+ADD COLUMN `traits_details` TEXT AFTER `traits`,
 ADD COLUMN `keylink_details` TEXT AFTER `keylink`;
 
