@@ -327,15 +327,34 @@ const getEvents = async (eventIds) => {
   }
 };
 
-// 更新事件状态
-const updateEventStatus = async (eventIds, happened = true) => {
+// 更新一个发生的事件状态
+const updateEventStatus = async (eventId, happened = true) => {
   try {
-    if (!eventIds || eventIds.length === 0) return;
+    if (!eventId || eventId.length === 0) return;
 
     const query = `
       UPDATE Events 
       SET if_happened = ?
-      WHERE id IN (${eventIds.join(',')})
+      WHERE id=?
+    `;
+    await executeQuery(query, [happened ? 1 : 0,eventId]);
+    
+    return true;
+  } catch (error) {
+    console.error('更新事件状态失败:', error);
+    throw error;
+  }
+};
+
+// 更新多个事件状态
+const updateEventStatuses = async (eventId, happened = true) => {
+  try {
+    if (!eventId || eventId.length === 0) return;
+
+    const query = `
+      UPDATE Events 
+      SET if_happened = ?
+      WHERE id IN (${eventId.join(',')})
     `;
     await executeQuery(query, [happened ? 1 : 0]);
     
@@ -346,7 +365,7 @@ const updateEventStatus = async (eventIds, happened = true) => {
   }
 };
 
-// 生成随机事件
+// 生成随机事件,只发生一个
 const generateRandomEvents = async (mapId) => {
   try {
     // 1. 获取地图关联的事件ID
@@ -358,13 +377,17 @@ const generateRandomEvents = async (mapId) => {
     // 3. 根据概率判断事件是否发生
     const occurredEvents = events.filter(event => {
       const probability = event.rate / 100;
-      return Math.random() < probability;
+      return Math.random() < probability && !event.if_happened;//唯一事件发生过就不发生
     });
     
     // 4. 更新发生的事件状态
     if (occurredEvents.length > 0) {
-      const occurredEventIds = occurredEvents.map(event => event.id);
-      await updateEventStatus(occurredEventIds, true);
+      occurredEvents.sort((a, b) => b.rate - a.rate || a.id - b.id);
+      const selectedEvent = occurredEvents[0];
+      console.log('选择的事件:', selectedEvent);
+      const selectedEventId = selectedEvent.id;
+      console.log('事件ID:', selectedEventId);
+      await updateEventStatus(selectedEventId, true);
     }
     
     return occurredEvents;
@@ -378,7 +401,7 @@ const generateRandomEvents = async (mapId) => {
 const resetEventStatus = async (mapId) => {
   try {
     const eventIds = await getMapEvents(mapId);
-    await updateEventStatus(eventIds, false);
+    await updateEventStatuses(eventIds, false);
     return true;
   } catch (error) {
     console.error('重置事件状态失败:', error);
@@ -390,6 +413,7 @@ const resetEventStatus = async (mapId) => {
   // 组件加载时初始化
   useEffect(() => {
     const initialize = async () => {
+      //待优化————————————————————————————————————————————————————————————
       await initializeProfessions();
       
       // 从localStorage获取当前角色ID
