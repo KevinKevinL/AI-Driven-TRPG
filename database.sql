@@ -4,6 +4,9 @@ use characters;
 CREATE TABLE `Characters` (
   `id` CHAR(64) PRIMARY KEY,
   `name` TEXT,
+  `gender` TEXT,
+  `residence` TEXT,
+  `birthplace` TEXT,
   `profession_id` INTEGER,
   `description` TEXT,
   `if_npc` TINYINT(1)
