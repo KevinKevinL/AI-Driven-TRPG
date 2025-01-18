@@ -6,7 +6,6 @@ import { AttributeBox } from '@components/coc/AttributeBox';
 import { DiceAnimation } from '@components/coc/DiceAnimation';
 import { generateAttributes } from '@utils/diceSystem';
 import { attributeMapping, derivedAttributes } from '@constants/characterConfig';
-import { skillCategories } from '@constants/skills';
 import { PROFESSIONS } from '@constants/professions';
 import { character } from '@utils/characterState';
 import DatabaseManager from '@components/coc/DatabaseManager';
@@ -123,7 +122,6 @@ const AttributesGenerator = () => {
         pathname: '/coc/skills',
         query: { 
             profession: professionTitle,
-            characterId: currentCharacterId // 确保传递角色ID
         }
       });
       } catch (error) {

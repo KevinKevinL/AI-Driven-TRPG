@@ -12,18 +12,23 @@ const DatabaseManager = () => {
   const [dbStatus, setDbStatus] = useState('');
   const [error, setError] = useState(null);
 
-  // 创建新角色并获取ID
+  // 创建新角色id和name
   const createNewCharacter = async () => {
     try {
-      const createCharacterQuery = `
-        INSERT INTO Characters (name)
-        VALUES ("新调查员")
-      `;
-      const result = await executeQuery(createCharacterQuery);
-      const newId = result.insertId;
+      // 生成64位的随机十六进制字符串
+      const array = new Uint8Array(32); // 32 bytes = 64 hex chars
+      crypto.getRandomValues(array);
+      const newId = Array.from(array)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
       
-      // 保存新的角色ID到localStorage
-      localStorage.setItem('currentCharacterId', newId.toString());
+      const createCharacterQuery = `
+        INSERT INTO Characters (id, name)
+        VALUES (?, "NewMan")
+      `;
+      
+      const result = await executeQuery(createCharacterQuery, [newId]);
+      localStorage.setItem('currentCharacterId', newId);
       setCurrentCharacterId(newId);
       setDbStatus(`创建了新角色，ID: ${newId}`);
       return newId;
@@ -279,6 +284,36 @@ const DatabaseManager = () => {
     }
   };
   
+ //保存人物描述
+ const saveDetailedDescription = async (characterId, name, gender, residence, birthplace, description, if_npc) => {
+  try {
+    const query = `
+      UPDATE Characters
+      SET name = ?,gender = ?,residence = ?,birthplace = ?,description = ?,if_npc = ? WHERE id = ?
+    `;
+
+    const params = [
+      name,
+      gender,
+      residence,
+      birthplace,
+      description,
+      if_npc,
+      characterId,
+    ];
+    
+    const result = await executeQuery(query, params);
+    console.log('数据库更新结果:', result);
+    
+    return true;
+  } catch (error) {
+    console.error('保存描述数据失败:', error);
+    throw new Error('保存描述数据失败');
+  }
+};
+
+ 
+
 // 获取地图相关的事件
 const getMapEvents = async (mapId) => {
   try {
@@ -419,7 +454,7 @@ const resetEventStatus = async (mapId) => {
       // 从localStorage获取当前角色ID
       const storedId = localStorage.getItem('currentCharacterId');
       if (storedId) {
-        setCurrentCharacterId(parseInt(storedId));
+        setCurrentCharacterId(storedId);
       }
     };
     
@@ -436,10 +471,12 @@ const resetEventStatus = async (mapId) => {
     saveSkills,
     loadBackground,
     saveBackground,
+    saveDetailedDescription,
     generateRandomEvents,
     getMapEvents,
     getEvents,
     resetEventStatus,
+
   };
 };
 
