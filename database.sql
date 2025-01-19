@@ -127,6 +127,8 @@ ALTER TABLE `Attributes` ADD UNIQUE KEY `unique_character` (`character_id`);
 
 ALTER TABLE `DerivedAttributes` ADD UNIQUE KEY `unique_character` (`character_id`);
 
+ALTER TABLE `Backgrounds` ADD UNIQUE KEY `unique_character` (`character_id`);
+
 ALTER TABLE `Skills` ADD FOREIGN KEY (`character_id`) REFERENCES `Characters` (`id`);
 
 ALTER TABLE `Backgrounds` ADD FOREIGN KEY (`character_id`) REFERENCES `Characters` (`id`);
@@ -135,7 +137,7 @@ ALTER TABLE `CharacterEquipment` ADD FOREIGN KEY (`character_id`) REFERENCES `Ch
 
 ALTER TABLE `CharacterEquipment` ADD FOREIGN KEY (`equipment_id`) REFERENCES `Equipment` (`id`);
 
-ALTER TABLE `Backgrounds` ADD UNIQUE KEY `unique_character` (`character_id`);
+
 
 ALTER TABLE `Backgrounds`
 ADD COLUMN `beliefs_details` TEXT AFTER `beliefs`,
