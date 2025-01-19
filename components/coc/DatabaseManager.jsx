@@ -142,6 +142,43 @@ const DatabaseManager = () => {
     }
   };
 
+  // 保存派生属性
+  const saveDerivedAttributes = async (characterId, derivedAttributes) => {
+    try {
+      const derivedattributessql = `
+          INSERT INTO derivedattributes (
+              character_id, sanity, magicPoints, interestPoints,
+              hitPoints, moveRate, damageBonus, build, professionalPoints
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+              sanity = VALUES(sanity),
+              magicPoints = VALUES(magicPoints),
+              interestPoints = VALUES(interestPoints),
+              hitPoints = VALUES(hitPoints),
+              moveRate = VALUES(moveRate),
+              damageBonus = VALUES(damageBonus),
+              build = VALUES(build),
+              professionalPoints = VALUES(professionalPoints)
+      `;
+      const params = [
+          characterId,
+          derivedAttributes.sanity,
+          derivedAttributes.magicPoints,
+          derivedAttributes.interestPoints,
+          derivedAttributes.hitPoints,
+          derivedAttributes.moveRate,
+          derivedAttributes.damageBonus,
+          derivedAttributes.build,
+          derivedAttributes.professionalPoints
+      ];
+      await executeQuery(derivedattributessql, params);
+      return true;
+    } catch (error) {
+      console.error('保存派生属性失败:', error);
+      throw error;
+    }
+  };
+
   // 保存技能
   const saveSkills = async (characterId, skills) => {
     try {
