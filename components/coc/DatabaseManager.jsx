@@ -146,7 +146,7 @@ const DatabaseManager = () => {
   const saveDerivedAttributes = async (characterId, derivedAttributes) => {
     try {
       const derivedattributessql = `
-          INSERT INTO derivedattributes (
+          INSERT INTO DerivedAttributes (
               character_id, sanity, magicPoints, interestPoints,
               hitPoints, moveRate, damageBonus, build, professionalPoints
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)

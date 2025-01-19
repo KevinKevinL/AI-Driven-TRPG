@@ -71,7 +71,8 @@ const AttributesGenerator = () => {
 
   const {
     currentCharacterId,
-    saveAttributes
+    saveAttributes,
+    saveDerivedAttributes
   } = DatabaseManager();
 
   const handleContinue = async () => {
