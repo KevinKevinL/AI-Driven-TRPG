@@ -129,6 +129,8 @@ ALTER TABLE `DerivedAttributes` ADD UNIQUE KEY `unique_character` (`character_id
 
 ALTER TABLE `Backgrounds` ADD UNIQUE KEY `unique_character` (`character_id`);
 
+ALTER TABLE `Skills` ADD UNIQUE KEY `unique_character` (`character_id`);
+
 ALTER TABLE `Skills` ADD FOREIGN KEY (`character_id`) REFERENCES `Characters` (`id`);
 
 ALTER TABLE `Backgrounds` ADD FOREIGN KEY (`character_id`) REFERENCES `Characters` (`id`);
