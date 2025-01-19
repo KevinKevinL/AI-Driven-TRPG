@@ -441,6 +441,7 @@ const updateEventStatuses = async (eventId, happened = true) => {
 const generateRandomEvents = async (mapId) => {
   
   try {
+    let selectedEvent = null;
     console.log('生成随机事件!!!!!!!!');
     // 1. 获取地图关联的事件ID
     const eventIds = await getMapEvents(mapId);
@@ -457,14 +458,14 @@ const generateRandomEvents = async (mapId) => {
     // 4. 更新发生的事件状态
     if (occurredEvents.length > 0) {
       occurredEvents.sort((a, b) => b.rate - a.rate || a.id - b.id);
-      const selectedEvent = occurredEvents[0];
+      selectedEvent = occurredEvents[0];
       console.log('选择的事件:', selectedEvent);
       const selectedEventId = selectedEvent.id;
       console.log('事件ID:', selectedEventId);
       await updateEventStatus(selectedEventId, true);
     }
     
-    return occurredEvents;
+    return selectedEvent;
   } catch (error) {
     console.error('生成随机事件失败:', error);
     throw error;

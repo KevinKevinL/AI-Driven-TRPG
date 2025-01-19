@@ -26,8 +26,8 @@ const RandomEventsPage = () => {
     // }
     try {
       // 获取随机事件
-      const events = await eventGenerator.handleGenerateEvents(mapId);
-      console.log('生成的事件:', events);
+      const event = await eventGenerator.handleGenerateEvents(mapId);
+      console.log('生成的事件:', event);
       // 清理 result 数据，去除不可见字符（如换行符、回车符、制表符）
       const cleanResult = (result) => {
         result = result.replace(/[\n\r\t]+/g, ''); // 替换掉换行符、回车符和制表符
@@ -35,7 +35,7 @@ const RandomEventsPage = () => {
       };
 
       // 解析和处理逻辑
-      const processedEvents = await Promise.all(events.map(async (event) => {
+      const processedEvent = await(async () => {
         try {
 
           if (!event.result) {
@@ -107,10 +107,10 @@ const RandomEventsPage = () => {
             checkResult: '检定出错，失败',
           };
         }
-      }));
+      })();
 
       // 更新状态
-      setOccurredEvents(processedEvents);
+      setOccurredEvents(processedEvent);
     } catch (err) {
       setError(err.message);
       console.error('生成事件时出错:', err);
@@ -148,7 +148,7 @@ const RandomEventsPage = () => {
         >
           {loading ? '生成中...' : '生成随机事件'}
         </button>
-
+  
         <button
           onClick={() => handleResetEvents(1)}
           disabled={loading}
@@ -157,35 +157,33 @@ const RandomEventsPage = () => {
           重置事件状态
         </button>
       </div>
-
+  
       {/* 错误提示 */}
       {error && (
         <div className="text-red-500 mb-4">
           错误: {error}
         </div>
       )}
-
+  
       {/* 显示生成的事件 */}
-      {occurredEvents.length > 0 && (
+      {occurredEvents && (
         <div>
           <h2 className="text-xl font-semibold mb-2">发生的事件:</h2>
-          <ul className="space-y-2">
-            {occurredEvents.map((event) => (
-              <li key={event.id} className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-start justify-between">
-                  <span className="font-medium text-gray-700">事件 ID: {event.id}</span>
-                  <span className="text-sm text-gray-500">触发概率: {event.rate}%</span>
-                </div>
-                <div className="mt-2">
-                  <p className="text-gray-800">{event.event_info}</p>
-                </div>
-                <div className="mt-2 text-gray-600">
-                  <p>{event.testDescription}</p> {/* 显示预处理结果 */}
-                  {event.checkResult && <p className="text-green-600">{event.checkResult}</p>} {/* 显示检定结果 */}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-start justify-between">
+              <span className="font-medium text-gray-700">事件 ID: {occurredEvents.id}</span>
+              <span className="text-sm text-gray-500">触发概率: {occurredEvents.rate}%</span>
+            </div>
+            <div className="mt-2">
+              <p className="text-gray-800">{occurredEvents.event_info}</p>
+            </div>
+            <div className="mt-2 text-gray-600">
+              <p>{occurredEvents.testDescription}</p>
+              {occurredEvents.checkResult && (
+                <p className="text-green-600">{occurredEvents.checkResult}</p>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
