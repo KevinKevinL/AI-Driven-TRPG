@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useRandomEventGenerator } from '@/components/mainchat/RandomEventGenerator';
 import { DiceSystem } from '@utils/diceSystem';
 import DatabaseManager from '@components/coc/DatabaseManager';
+import { fetchChatGPTResponse } from '../../utils/chatAPI';
+import { calculateDerivedValues } from '@components/coc/AttributeBox';
 
 const RandomEventsPage = () => {
   const [occurredEvents, setOccurredEvents] = useState([]);
@@ -27,6 +29,11 @@ const RandomEventsPage = () => {
     try {
       // 获取随机事件
       const event = await eventGenerator.handleGenerateEvents(mapId);
+      if (!event) {
+        console.error('未找到任何事件');
+        // setOccurredEvents(null);
+        return;
+      }
       console.log('生成的事件:', event);
       // 清理 result 数据，去除不可见字符（如换行符、回车符、制表符）
       const cleanResult = (result) => {
@@ -59,6 +66,8 @@ const RandomEventsPage = () => {
           let testDescription = '无需鉴定';
           let roll = 0;
           let checkResult = null; // 默认为 null
+          let chatGPTPrompt = ""; // 用于发送给 chatGPT 的内容
+
           if (resultData.testRequired > 0) {
             // 进行检定，掷出随机值
             roll = DiceSystem.rollD100(); // 使用现有的 DiceSystem.rollD100()
@@ -77,16 +86,26 @@ const RandomEventsPage = () => {
             if (attributeValue !== null) {
               if (roll <= attributeValue) {
                 checkResult = '检定成功';
+                testDescription = `掷骰结果: ${roll}（需要检定技能: ${attribute.label}）`;
+                // 发送成功效果给 chatGPT 生成故事描述
+                chatGPTPrompt = `${event.event_info} 成功效果: ${resultData.successEffect}`;
               } else {
                 checkResult = '检定失败';
+                testDescription = `掷骰结果: ${roll}（需要检定技能: ${attribute.label}）`;
+                // 发送失败效果给 chatGPT 生成故事描述
+                chatGPTPrompt = `${event.event_info} 失败效果: ${resultData.failEffect}`;
               }
             } else {
               checkResult = '未找到角色的属性值';
+              chatGPTPrompt = `${attribute.label} 无法进行检定，因为找不到角色的属性值。`;
             }
-
-            // 更新描述信息
-            testDescription = `掷骰结果: ${roll}（需要检定技能: ${attribute.label}）`;
           }
+
+          // 调用 fetchChatGPTResponse 生成完整的故事描述
+          const chatGPTResponse = await fetchChatGPTResponse([{
+            role: "user",
+            content: chatGPTPrompt
+          }]);
 
           return {
             ...event,
@@ -94,6 +113,7 @@ const RandomEventsPage = () => {
             testDescription, // 鉴定逻辑的结果
             roll, // 返回的随机值
             checkResult, // 检定结果（成功/失败/未找到属性）
+            chatGPTResponse: chatGPTResponse.reply || "未能生成完整的故事描述", // 获取 GPT 的回应
           };
         } catch (err) {
           console.error('解析 result 字段失败:', err);
@@ -183,6 +203,13 @@ const RandomEventsPage = () => {
                 <p className="text-green-600">{occurredEvents.checkResult}</p>
               )}
             </div>
+            {/* 显示 GPT 生成的故事描述 */}
+            {occurredEvents.chatGPTResponse && (
+              <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold">生成的故事描述:</h3>
+                <p>{occurredEvents.chatGPTResponse}</p>
+              </div>
+            )}
           </div>
         </div>
       )}
