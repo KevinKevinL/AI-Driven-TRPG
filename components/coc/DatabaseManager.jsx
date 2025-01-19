@@ -382,7 +382,7 @@ const getEvents = async (eventIds) => {
     }
 
     const query = `
-      SELECT id, event_info, rate, if_happened
+      SELECT *
       FROM Events 
       WHERE id IN (${eventIds.join(',')})
     `;
@@ -439,7 +439,9 @@ const updateEventStatuses = async (eventId, happened = true) => {
 
 // 生成随机事件,只发生一个
 const generateRandomEvents = async (mapId) => {
+  
   try {
+    console.log('生成随机事件!!!!!!!!');
     // 1. 获取地图关联的事件ID
     const eventIds = await getMapEvents(mapId);
     
@@ -541,11 +543,11 @@ const getAttributeByTestRequired = (testRequired) => {
 // 根据 testRequired 返回对应的表
 const getTableForTestRequired = (testRequired) => {
   if (testRequired >= 1 && testRequired <= 9) {
-    return 'attributes'; // 对应属性表
+    return 'Attributes'; // 对应属性表
   } else if (testRequired >= 10 && testRequired <= 17) {
-    return 'derivedattributes'; // 对应派生属性表
+    return 'DerivedAttributes'; // 对应派生属性表
   } else {
-    return 'skills'; // 对应技能表
+    return 'Skills'; // 对应技能表
   }
 };
 
@@ -555,12 +557,12 @@ const getCharacterAttributeValue = async (testRequired, testCharacterId) => {
   const table = getTableForTestRequired(testRequired);  // 获取相应的表（属性、派生属性、技能）
 
   let query = '';
-  if (table === 'attributes') {
-    query = `SELECT ${attribute.key} FROM attributes WHERE character_id = ?`;
-  } else if (table === 'derivedattributes') {
-    query = `SELECT ${attribute.key} FROM derivedattributes WHERE character_id = ?`;
-  } else if (table === 'skills') {
-    query = `SELECT ${attribute.key} FROM skills WHERE character_id = ?`;
+  if (table === 'Attributes') {
+    query = `SELECT ${attribute.key} FROM Attributes WHERE character_id = ?`;
+  } else if (table === 'DerivedAttributes') {
+    query = `SELECT ${attribute.key} FROM DerivedAttributes WHERE character_id = ?`;
+  } else if (table === 'Skills') {
+    query = `SELECT ${attribute.key} FROM Skills WHERE character_id = ?`;
   }
 
   try {
