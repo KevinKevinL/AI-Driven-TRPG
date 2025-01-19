@@ -601,6 +601,7 @@ const getCharacterAttributeValue = async (testRequired, testCharacterId) => {
     createNewCharacter,
     saveProfessionChoice,
     saveAttributes,
+    saveDerivedAttributes,
     saveSkills,
     loadBackground,
     saveBackground,
