@@ -1,34 +1,65 @@
 import { useState } from 'react';
 import DialogueBox from '@components/mainchat/DialogueBox';
 import CharacterCard from '@components/mainchat/CharacterCard';
-import Panel from '@components/mainchat/Panel';
 import DicePanel from '@components/mainchat/DicePanel';
+import Panel from '@components/mainchat/Panel';
+import Image from 'next/image';
 
 export default function MainPlay() {
   const [messages, setMessages] = useState([
-    { sender: 'KP', text: '欢迎来到克苏鲁的呼唤...' },
-    { sender: '玩家', text: '我想调查这个房间' },
+    { sender: 'KP', text: '在风暴肆虐的黑夜中，调查员正驱车前往阿卡姆...' },
   ]);
 
   return (
-    <div className="min-h-screen bg-[#0a0d11] py-10 text-emerald-400">
-      <div className="max-w-6xl mx-auto px-6">
-        {/* 页面标题 */}
-        <h1 className="text-4xl font-bold text-center font-lovecraft tracking-wider mb-8">
-          克苏鲁的呼唤 PLAY
-        </h1>
-
-        {/* 主布局 */}
-        <div className="grid grid-cols-3 gap-6">
-          {/* 左侧：对话区域 */}
-          <div className="col-span-2">
-            <DialogueBox messages={messages} setMessages={setMessages} />
+    <div className="flex h-screen bg-slate-950">
+      {/* Main Content Area */}
+      <div className="flex-1 flex">
+        {/* Left Side - Chat Area (2/3 width) */}
+        <div className="w-2/3 h-full relative">
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <Image 
+              src="/images/forest-background.png"
+              alt="Forest Background"
+              fill
+              className="object-cover opacity-90"
+              priority
+              quality={100}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 to-slate-950/40" />
           </div>
 
-          {/* 右侧：人物卡和功能面板 */}
-          <div className="col-span-1 space-y-4">
-            <CharacterCard title="当前人物卡" />
+          {/* Chat Interface */}
+          <div className="relative h-full flex flex-col p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-emerald-400 font-lovecraft tracking-wider">游戏对话</h2>
+              <div className="text-emerald-500/60 font-lovecraft">CALL OF CTHULHU</div>
+            </div>
+            
+            <div className="flex-1 bg-slate-950/40 backdrop-blur-sm rounded-lg border border-emerald-900/20 shadow-lg">
+              <DialogueBox 
+                messages={messages} 
+                setMessages={setMessages}
+                className="h-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side - Status Panels (1/3 width) */}
+        <div className="w-1/3 h-full bg-slate-950/80 border-l border-emerald-900/20 p-6 overflow-y-auto">
+          {/* Character Status */}
+          <div className="mb-6">
+            <CharacterCard />
+          </div>
+
+          {/* Dice Panel */}
+          <div className="mb-6">
             <DicePanel />
+          </div>
+
+          {/* Quick Actions Panel */}
+          <div className="mb-6">
             <Panel title="快捷操作" />
           </div>
         </div>

@@ -1,28 +1,36 @@
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import DatabaseManager from '@components/coc/DatabaseManager';
 import { List } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
-// 简单的模态窗口组件
+// Modal component
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-slate-900 border border-emerald-900/30 rounded-lg max-w-3xl max-h-[80vh] w-full m-4 overflow-hidden">
-        <div className="p-4 border-b border-emerald-900/30 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-emerald-400">{title}</h2>
-          <button 
-            onClick={onClose}
-            className="text-emerald-400 hover:text-emerald-300"
-          >
-            ×
-          </button>
-        </div>
-        <div className="p-4 overflow-y-auto">
-          {children}
+  return createPortal(
+    <div className="fixed inset-0 z-[100]">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="fixed inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div className="relative bg-slate-950/90 border border-emerald-900/30 rounded-xl w-[800px] shadow-xl shadow-emerald-900/20">
+            <div className="p-4 border-b border-emerald-900/30 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-emerald-400">{title}</h2>
+              <button 
+                onClick={onClose}
+                className="text-2xl text-emerald-400 hover:text-emerald-300 leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
+              {children}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -51,35 +59,23 @@ export default function CharacterCard({ title }) {
   }, []);
 
   if (loading) {
-    return (
-      <div className="p-4 bg-slate-800/50 border border-emerald-900/30 rounded-lg shadow-lg">
-        <p className="text-emerald-300">加载中...</p>
-      </div>
-    );
+    return <p className="text-emerald-300">加载中...</p>;
   }
 
   if (error) {
-    return (
-      <div className="p-4 bg-slate-800/50 border border-emerald-900/30 rounded-lg shadow-lg">
-        <p className="text-red-500">错误: {error}</p>
-      </div>
-    );
+    return <p className="text-red-500">错误: {error}</p>;
   }
 
   if (!characterData) {
-    return (
-      <div className="p-4 bg-slate-800/50 border border-emerald-900/30 rounded-lg shadow-lg">
-        <p className="text-emerald-300">未找到角色数据</p>
-      </div>
-    );
+    return <p className="text-emerald-300">未找到角色数据</p>;
   }
 
   const { attributes, derivedAttributes, skills, characterInfo } = characterData;
 
   return (
-    <div className="bg-slate-800/50 border border-emerald-900/30 rounded-lg shadow-lg">
-      {/* 基础卡片内容 */}
-      <div className="p-4">
+    <div>
+      {/* Card Content */}
+      <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-emerald-400">{characterInfo?.name || '未知'}</h2>
           <button 
@@ -91,16 +87,23 @@ export default function CharacterCard({ title }) {
         </div>
 
         <div className="flex gap-4">
-          {/* 人物立绘占位 */}
-          <div className="w-32 h-40 bg-slate-700/50 rounded flex items-center justify-center">
-            <span className="text-emerald-300/50">立绘</span>
+          {/* Character Portrait Placeholder */}
+          <div className="relative w-32 h-40 rounded overflow-hidden">
+            <Image 
+              src="/images/Amilia.png" // 图片应该放在 public/images 目录下
+              alt="Character Portrait"
+              fill
+              className="object-cover"
+              sizes="128px"
+              priority
+            />
           </div>
 
-          {/* 基础状态信息 */}
+          {/* Basic Status Info */}
           <div className="flex flex-col justify-center gap-2">
             <div className="flex items-center gap-2">
               <span className="text-emerald-300">生命值:</span>
-              <div className="w-32 h-4 bg-slate-700 rounded-full overflow-hidden">
+              <div className="w-32 h-4 bg-slate-700/50 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-red-500 transition-all duration-300" 
                   style={{width: `${(derivedAttributes?.hitPoints || 0) / derivedAttributes?.hitPoints * 100}%`}}
@@ -110,7 +113,7 @@ export default function CharacterCard({ title }) {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-emerald-300">理智值:</span>
-              <div className="w-32 h-4 bg-slate-700 rounded-full overflow-hidden">
+              <div className="w-32 h-4 bg-slate-700/50 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-blue-500 transition-all duration-300" 
                   style={{width: `${(derivedAttributes?.sanity || 0) / derivedAttributes?.sanity * 100}%`}}
@@ -122,13 +125,13 @@ export default function CharacterCard({ title }) {
         </div>
       </div>
 
-      {/* 详情模态窗口 */}
+      {/* Details Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={`${characterInfo?.name || '未知'} - 角色详情`}
       >
-        {/* 基本信息 */}
+        {/* Basic Info */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-emerald-400 mb-2">基本信息</h3>
           <div className="grid grid-cols-2 gap-2 text-emerald-300">
@@ -138,7 +141,7 @@ export default function CharacterCard({ title }) {
           </div>
         </div>
 
-        {/* 基础属性 */}
+        {/* Base Attributes */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-emerald-400 mb-2">基础属性</h3>
           <div className="grid grid-cols-3 gap-2 text-emerald-300">
@@ -154,7 +157,7 @@ export default function CharacterCard({ title }) {
           </div>
         </div>
 
-        {/* 派生属性 */}
+        {/* Derived Attributes */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-emerald-400 mb-2">派生属性</h3>
           <div className="grid grid-cols-3 gap-2 text-emerald-300">
@@ -165,7 +168,7 @@ export default function CharacterCard({ title }) {
           </div>
         </div>
 
-        {/* 技能 */}
+        {/* Skills */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-emerald-400 mb-2">技能</h3>
           <div className="grid grid-cols-3 gap-2 text-emerald-300">
