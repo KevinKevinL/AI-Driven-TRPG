@@ -2,10 +2,8 @@ import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { DiceSystem } from "@utils/diceSystem"; // 引用骰子逻辑
+import { DiceSystem } from "@utils/diceSystem"; 
 import { BACKGROUND_OPTIONS } from "@constants/backgroundList";
-import { AttributeBox } from '@components/coc/AttributeBox';
-import { skillCategories } from '@constants/skills';
 import { PROFESSIONS } from '@constants/professions';
 import { character } from "@utils/characterState"; // 全局状态管理对象
 import DatabaseManager from "@components/coc/DatabaseManager"; // 引入数据库管理
@@ -29,16 +27,17 @@ const BackgroundPage = () => {
   const [keyConnection, setKeyConnection] = useState(null); // 关键背景连接
   const [isRolling, setIsRolling] = useState(false);
   const router = useRouter();
-  const { profession: professionTitle, characterId } = router.query;
+  const { profession: professionTitle} = router.query;
   const profession = professionTitle && PROFESSIONS[professionTitle];
   const [validationErrors, setValidationErrors] = useState([]); 
+  const currentCharacterId = localStorage.getItem('currentCharacterId');
 
   // 从数据库加载背景数据
   useEffect(() => {
     const fetchBackground = async () => {
-      if(characterId){
+      if(currentCharacterId){
         try {
-          const background = await loadBackground(characterId);
+          const background = await loadBackground(currentCharacterId);
           if (background) {
             setSelectedBackground({
               beliefs: background.beliefs || "",
@@ -63,7 +62,7 @@ const BackgroundPage = () => {
     };
 
     fetchBackground();
-  }, [characterId]);
+  }, [currentCharacterId]);
 
   // 验证逻辑
   const validateSelection = () => {
@@ -128,7 +127,7 @@ const BackgroundPage = () => {
       return;
     }
     try {
-      const currentCharacterId = characterId || localStorage.getItem('currentCharacterId');
+      const currentCharacterId = localStorage.getItem('currentCharacterId');
       if (!currentCharacterId) {
         setShowError('找不到角色ID，请重新开始创建角色');
         return;
@@ -176,7 +175,7 @@ const BackgroundPage = () => {
       <div className="min-h-screen bg-[#0a0d11] py-10">
         <div className="max-w-4xl mx-auto px-6">
           <Link
-            href={`/coc/skills?profession=${professionTitle}&characterId=${characterId}`}
+            href={`/coc/skills?profession=${professionTitle}&characterId=${currentCharacterId}`}
             className="inline-block mb-6 text-emerald-400 hover:text-emerald-300 
                      transition-colors font-lovecraft tracking-wider"
           >

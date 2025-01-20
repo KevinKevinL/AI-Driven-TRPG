@@ -12,18 +12,23 @@ const DatabaseManager = () => {
   const [dbStatus, setDbStatus] = useState('');
   const [error, setError] = useState(null);
 
-  // 创建新角色并获取ID
+  // 创建新角色id和name
   const createNewCharacter = async () => {
     try {
-      const createCharacterQuery = `
-        INSERT INTO Characters (name)
-        VALUES ("新调查员")
-      `;
-      const result = await executeQuery(createCharacterQuery);
-      const newId = result.insertId;
+      // 生成64位的随机十六进制字符串
+      const array = new Uint8Array(32); // 32 bytes = 64 hex chars
+      crypto.getRandomValues(array);
+      const newId = Array.from(array)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
       
-      // 保存新的角色ID到localStorage
-      localStorage.setItem('currentCharacterId', newId.toString());
+      const createCharacterQuery = `
+        INSERT INTO Characters (id, name)
+        VALUES (?, "NewMan")
+      `;
+      
+      const result = await executeQuery(createCharacterQuery, [newId]);
+      localStorage.setItem('currentCharacterId', newId);
       setCurrentCharacterId(newId);
       setDbStatus(`创建了新角色，ID: ${newId}`);
       return newId;
@@ -133,6 +138,43 @@ const DatabaseManager = () => {
       return true;
     } catch (error) {
       console.error('保存属性失败:', error);
+      throw error;
+    }
+  };
+
+  // 保存派生属性
+  const saveDerivedAttributes = async (characterId, derivedAttributes) => {
+    try {
+      const derivedattributessql = `
+          INSERT INTO DerivedAttributes (
+              character_id, sanity, magicPoints, interestPoints,
+              hitPoints, moveRate, damageBonus, build, professionalPoints
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+              sanity = VALUES(sanity),
+              magicPoints = VALUES(magicPoints),
+              interestPoints = VALUES(interestPoints),
+              hitPoints = VALUES(hitPoints),
+              moveRate = VALUES(moveRate),
+              damageBonus = VALUES(damageBonus),
+              build = VALUES(build),
+              professionalPoints = VALUES(professionalPoints)
+      `;
+      const params = [
+          characterId,
+          derivedAttributes.sanity,
+          derivedAttributes.magicPoints,
+          derivedAttributes.interestPoints,
+          derivedAttributes.hitPoints,
+          derivedAttributes.moveRate,
+          derivedAttributes.damageBonus,
+          derivedAttributes.build,
+          derivedAttributes.professionalPoints
+      ];
+      await executeQuery(derivedattributessql, params);
+      return true;
+    } catch (error) {
+      console.error('保存派生属性失败:', error);
       throw error;
     }
   };
@@ -279,6 +321,36 @@ const DatabaseManager = () => {
     }
   };
   
+ //保存人物描述
+ const saveDetailedDescription = async (characterId, name, gender, residence, birthplace, description, if_npc) => {
+  try {
+    const query = `
+      UPDATE Characters
+      SET name = ?,gender = ?,residence = ?,birthplace = ?,description = ?,if_npc = ? WHERE id = ?
+    `;
+
+    const params = [
+      name,
+      gender,
+      residence,
+      birthplace,
+      description,
+      if_npc,
+      characterId,
+    ];
+    
+    const result = await executeQuery(query, params);
+    console.log('数据库更新结果:', result);
+    
+    return true;
+  } catch (error) {
+    console.error('保存描述数据失败:', error);
+    throw new Error('保存描述数据失败');
+  }
+};
+
+ 
+
 // 获取地图相关的事件
 const getMapEvents = async (mapId) => {
   try {
@@ -310,7 +382,7 @@ const getEvents = async (eventIds) => {
     }
 
     const query = `
-      SELECT id, event_info, rate, if_happened
+      SELECT *
       FROM Events 
       WHERE id IN (${eventIds.join(',')})
     `;
@@ -367,7 +439,10 @@ const updateEventStatuses = async (eventId, happened = true) => {
 
 // 生成随机事件,只发生一个
 const generateRandomEvents = async (mapId) => {
+  
   try {
+    let selectedEvent = null;
+    console.log('生成随机事件!!!!!!!!');
     // 1. 获取地图关联的事件ID
     const eventIds = await getMapEvents(mapId);
     
@@ -383,14 +458,14 @@ const generateRandomEvents = async (mapId) => {
     // 4. 更新发生的事件状态
     if (occurredEvents.length > 0) {
       occurredEvents.sort((a, b) => b.rate - a.rate || a.id - b.id);
-      const selectedEvent = occurredEvents[0];
+      selectedEvent = occurredEvents[0];
       console.log('选择的事件:', selectedEvent);
       const selectedEventId = selectedEvent.id;
       console.log('事件ID:', selectedEventId);
       await updateEventStatus(selectedEventId, true);
     }
     
-    return occurredEvents;
+    return selectedEvent;
   } catch (error) {
     console.error('生成随机事件失败:', error);
     throw error;
@@ -409,6 +484,146 @@ const resetEventStatus = async (mapId) => {
   }
 };
 
+// 根据 testRequired 返回对应的属性对象
+const getAttributeByTestRequired = (testRequired) => {
+  if (testRequired >= 1 && testRequired <= 9) {
+    // 返回 attributes 表中对应的属性
+    const attributes = [
+      { test_id: 1, key: 'strength', label: '力量', englishLabel: 'STR' },
+      { test_id: 2, key: 'constitution', label: '体质', englishLabel: 'CON' },
+      { test_id: 3, key: 'size', label: '体型', englishLabel: 'SIZ' },
+      { test_id: 4, key: 'dexterity', label: '敏捷', englishLabel: 'DEX' },
+      { test_id: 5, key: 'appearance', label: '外貌', englishLabel: 'APP' },
+      { test_id: 6, key: 'intelligence', label: '智力', englishLabel: 'INT' },
+      { test_id: 7, key: 'power', label: '意志', englishLabel: 'POW' },
+      { test_id: 8, key: 'education', label: '教育', englishLabel: 'EDU' },
+      { test_id: 9, key: 'luck', label: '幸运', englishLabel: 'Luck' }
+    ];
+
+    return attributes[testRequired - 1]; // 返回对应的属性对象
+  } else if (testRequired >= 10 && testRequired <= 17) {
+    // 返回 derivedAttributes 表中对应的属性
+    const derivedAttributes = [
+      { test_id: 10, key: 'sanity', label: '理智值', englishLabel: 'SAN' },
+      { test_id: 11, key: 'magicPoints', label: '魔法值', englishLabel: 'MP' },
+      { test_id: 12, key: 'interestPoints', label: '兴趣点数', englishLabel: 'Interest' },
+      { test_id: 13, key: 'hitPoints', label: '生命值', englishLabel: 'HP' },
+      { test_id: 14, key: 'moveRate', label: '移动速度', englishLabel: 'MOV' },
+      { test_id: 15, key: 'damageBonus', label: '伤害加值', englishLabel: 'DB' },
+      { test_id: 16, key: 'build', label: '体格', englishLabel: 'Build' },
+      { test_id: 17, key: 'professionalPoints', label: '职业技能点', englishLabel: 'Profession Points' }
+    ];
+
+    return derivedAttributes[testRequired - 10]; // 返回对应的派生属性对象
+  } else {
+    // 返回 skills 表中对应的技能
+    const skills = [
+      { test_id: 18, key: 'fighting', label: '格斗', englishLabel: 'Fighting' },
+      { test_id: 19, key: 'firearms', label: '枪械', englishLabel: 'Firearms' },
+      { test_id: 20, key: 'dodge', label: '闪避', englishLabel: 'Dodge' },
+      { test_id: 21, key: 'mechanics', label: '机械', englishLabel: 'Mechanics' },
+      { test_id: 22, key: 'drive', label: '驾驶', englishLabel: 'Drive' },
+      { test_id: 23, key: 'stealth', label: '潜行', englishLabel: 'Stealth' },
+      { test_id: 24, key: 'investigate', label: '侦查', englishLabel: 'Investigate' },
+      { test_id: 25, key: 'sleightOfHand', label: '巧手', englishLabel: 'Sleight of Hand' },
+      { test_id: 26, key: 'electronics', label: '电子', englishLabel: 'Electronics' },
+      { test_id: 27, key: 'history', label: '历史', englishLabel: 'History' },
+      { test_id: 28, key: 'science', label: '科学', englishLabel: 'Science' },
+      { test_id: 29, key: 'medicine', label: '医学', englishLabel: 'Medicine' },
+      { test_id: 30, key: 'occult', label: '神秘学', englishLabel: 'Occult' },
+      { test_id: 31, key: 'library', label: '图书馆使用', englishLabel: 'Library Use' },
+      { test_id: 32, key: 'art', label: '艺术', englishLabel: 'Art' },
+      { test_id: 33, key: 'persuade', label: '交际', englishLabel: 'Persuade' },
+      { test_id: 34, key: 'psychology', label: '心理学', englishLabel: 'Psychology' }
+    ];
+
+    return skills[testRequired - 18]; // 返回对应的技能对象
+  }
+};
+
+// 根据 testRequired 返回对应的表
+const getTableForTestRequired = (testRequired) => {
+  if (testRequired >= 1 && testRequired <= 9) {
+    return 'Attributes'; // 对应属性表
+  } else if (testRequired >= 10 && testRequired <= 17) {
+    return 'DerivedAttributes'; // 对应派生属性表
+  } else {
+    return 'Skills'; // 对应技能表
+  }
+};
+
+// 根据 testRequired 和 testCharacterId 查找角色属性值
+const getCharacterAttributeValue = async (testRequired, testCharacterId) => {
+  const attribute = getAttributeByTestRequired(testRequired);
+  const table = getTableForTestRequired(testRequired);  // 获取相应的表（属性、派生属性、技能）
+
+  let query = '';
+  if (table === 'Attributes') {
+    query = `SELECT ${attribute.key} FROM Attributes WHERE character_id = ?`;
+  } else if (table === 'DerivedAttributes') {
+    query = `SELECT ${attribute.key} FROM DerivedAttributes WHERE character_id = ?`;
+  } else if (table === 'Skills') {
+    query = `SELECT ${attribute.key} FROM Skills WHERE character_id = ?`;
+  }
+
+  try {
+    const result = await executeQuery(query, [testCharacterId]);
+    if (result && result.length > 0) {
+      return result[0][attribute.key];  // 返回对应属性的值
+    } else {
+      console.log('没有找到该角色的属性');
+      return null;
+    }
+  } catch (err) {
+    console.error('数据库查询失败:', err);
+    return null;
+  }
+};
+
+
+// 获取角色所有属性
+const loadCharacterAttributes = async (characterId) => {
+  try {
+    // 获取基础属性
+    const attributesQuery = `
+      SELECT * FROM Attributes 
+      WHERE character_id = ?
+    `;
+    const attributes = await executeQuery(attributesQuery, [characterId]);
+
+    // 获取派生属性
+    const derivedAttributesQuery = `
+      SELECT * FROM DerivedAttributes 
+      WHERE character_id = ?
+    `;
+    const derivedAttributes = await executeQuery(derivedAttributesQuery, [characterId]);
+
+    // 获取技能
+    const skillsQuery = `
+      SELECT * FROM Skills 
+      WHERE character_id = ?
+    `;
+    const skills = await executeQuery(skillsQuery, [characterId]);
+
+    // 获取角色基本信息
+    const characterQuery = `
+      SELECT name, gender, residence, birthplace, description 
+      FROM Characters 
+      WHERE id = ?
+    `;
+    const characterInfo = await executeQuery(characterQuery, [characterId]);
+
+    return {
+      attributes: attributes[0] || null,
+      derivedAttributes: derivedAttributes[0] || null,
+      skills: skills[0] || null,
+      characterInfo: characterInfo[0] || null
+    };
+  } catch (error) {
+    console.error('加载角色属性失败:', error);
+    throw new Error('加载角色属性失败');
+  }
+};
 
   // 组件加载时初始化
   useEffect(() => {
@@ -419,7 +634,7 @@ const resetEventStatus = async (mapId) => {
       // 从localStorage获取当前角色ID
       const storedId = localStorage.getItem('currentCharacterId');
       if (storedId) {
-        setCurrentCharacterId(parseInt(storedId));
+        setCurrentCharacterId(storedId);
       }
     };
     
@@ -433,13 +648,19 @@ const resetEventStatus = async (mapId) => {
     createNewCharacter,
     saveProfessionChoice,
     saveAttributes,
+    saveDerivedAttributes,
     saveSkills,
     loadBackground,
     saveBackground,
+    saveDetailedDescription,
     generateRandomEvents,
     getMapEvents,
     getEvents,
     resetEventStatus,
+    getAttributeByTestRequired,
+    getTableForTestRequired,
+    getCharacterAttributeValue,
+    loadCharacterAttributes,
   };
 };
 

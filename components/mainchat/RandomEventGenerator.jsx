@@ -13,8 +13,8 @@ export const useRandomEventGenerator = () => {
   const handleGenerateEvents = async (mapId) => {
     try {
       // 获取并返回生成的事件
-      const events = await generateRandomEvents(mapId);
-      return events;
+      const event = await generateRandomEvents(mapId);
+      return event;
     } catch (error) {
       console.error('生成随机事件失败:', error);
       throw error;

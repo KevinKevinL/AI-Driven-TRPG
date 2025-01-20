@@ -13,7 +13,7 @@ const MAX_SKILL_VALUE = 90;
 
 const SkillsAssignment = () => {
   const router = useRouter();
-  const { profession: professionTitle, characterId } = router.query;
+  const { profession: professionTitle} = router.query;
   const profession = professionTitle && PROFESSIONS[professionTitle];
   const [professionalPoints, setProfessionalPoints] = useState(0);
   const [interestPoints, setInterestPoints] = useState(0);
@@ -27,14 +27,6 @@ const SkillsAssignment = () => {
   });
 
   const { saveSkills } = DatabaseManager();
-
-  // 当获取到characterId时，保存到localStorage
-  useEffect(() => {
-    if (characterId) {
-      console.log('从路由接收到角色ID:', characterId);
-      localStorage.setItem('currentCharacterId', characterId);
-    }
-  }, [characterId]);
 
   // 解析信用评级范围
   const getCreditRange = () => {
@@ -79,7 +71,8 @@ const SkillsAssignment = () => {
     character.save();
   };
 
-  // 更新信用评级时保存状态
+  // 信用评级相关
+  //------------------------------------------------------------------
   const updateAndSaveCreditRating = (value) => {
     setCreditRating(value);
     character.setCreditRating(value);
@@ -224,6 +217,7 @@ const SkillsAssignment = () => {
     }
     return true;
   };
+//------------------------------------------------------------------
 
   const getSkillBaseValue = (skillKey) => {
     // 在所有技能类别中查找对应技能的基础值
@@ -277,7 +271,7 @@ const SkillsAssignment = () => {
 
     try {
       // 优先使用路由参数中的characterId，如果没有再从localStorage获取
-      const currentCharacterId = characterId || localStorage.getItem('currentCharacterId');
+      const currentCharacterId = localStorage.getItem('currentCharacterId');
       if (!currentCharacterId) {
         setShowError('找不到角色ID，请重新开始创建角色');
         return;
@@ -310,19 +304,17 @@ const SkillsAssignment = () => {
       console.log('角色ID:', currentCharacterId);
       console.log('技能数据:', skillsForDb);
 
-      await saveSkills(parseInt(currentCharacterId), skillsForDb);
+      await saveSkills(currentCharacterId, skillsForDb);
       console.log('技能数据保存成功');
 
       // 保存到前端状态
       character.save();
       
       // 跳转到下一页
-      // router.push('/coc/background');
       router.push({
         pathname: "/coc/background",
         query: { 
             profession: professionTitle,
-            characterId: currentCharacterId // 确保传递角色ID
         }
       });
     } catch (error) {

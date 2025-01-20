@@ -6,7 +6,6 @@ import { AttributeBox } from '@components/coc/AttributeBox';
 import { DiceAnimation } from '@components/coc/DiceAnimation';
 import { generateAttributes } from '@utils/diceSystem';
 import { attributeMapping, derivedAttributes } from '@constants/characterConfig';
-import { skillCategories } from '@constants/skills';
 import { PROFESSIONS } from '@constants/professions';
 import { character } from '@utils/characterState';
 import DatabaseManager from '@components/coc/DatabaseManager';
@@ -72,7 +71,8 @@ const AttributesGenerator = () => {
 
   const {
     currentCharacterId,
-    saveAttributes
+    saveAttributes,
+    saveDerivedAttributes
   } = DatabaseManager();
 
   const handleContinue = async () => {
@@ -117,13 +117,32 @@ const AttributesGenerator = () => {
         
         await saveAttributes(currentCharacterId, attributes);
         console.log('属性保存成功，准备跳转');
+
+        // 保存派生属性
+        console.log('开始保存派生属性');
+            // 保存派生属性到 derivedattributes 表
+            const derived = {
+                character_id: currentCharacterId,
+                sanity: attributes.sanity,
+                magicPoints: attributes.magicPoints,
+                interestPoints: attributes.interestPoints,
+                hitPoints: attributes.hitPoints,
+                moveRate: attributes.moveRate,
+                damageBonus: attributes.damageBonus,
+                build: attributes.build,
+                professionalPoints: attributes.professionalPoints
+            };
+
+            // 调用数据库保存函数
+            await saveDerivedAttributes(currentCharacterId, derived);
+
+            console.log('属性保存成功，准备跳转');
         
       // 传递必要的信息到技能页面
       router.push({
         pathname: '/coc/skills',
         query: { 
             profession: professionTitle,
-            characterId: currentCharacterId // 确保传递角色ID
         }
       });
       } catch (error) {

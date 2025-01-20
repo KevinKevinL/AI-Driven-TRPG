@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { useRouter } from "next/router";
 import DatabaseManager from "@components/coc/DatabaseManager";
 import { character } from "@utils/characterState";
 
@@ -18,9 +17,7 @@ const SummaryPage = () => {
   const [errors, setErrors] = useState({});
   const [description, setDescription] = useState("");
   const [generating, setGenerating] = useState(false);
-  const router = useRouter();
-
-  const { currentCharacterId, loadBackground } = DatabaseManager();
+  const { currentCharacterId, loadBackground, saveDetailedDescription} = DatabaseManager();
 
   useEffect(() => {
     const fetchCharacterData = async () => {
@@ -93,10 +90,9 @@ const SummaryPage = () => {
           content: `
             请根据以下角色信息生成一个完整的人物描述，用于克苏鲁的呼唤跑团游戏。描述格式如下：
 
-            1. 第一行：显示人物姓名，字体加粗且稍大。
-            2. 主要内容分为若干段落，例如角色的背景、性格、特质、技能等，描述要有理有据，重点突出关键链接及其补充细节。
-            3. 内容风格要沉浸感强，以丰富的描述突出角色的内心世界和外在表现,不能脱离违背人物已有信息。
-            4. 避免直接使用“人物描述”或其他标题，第一行只显示角色姓名。
+            1. 主要内容分为若干段落，例如角色的背景、性格、特质、技能等，描述要有理有据，重点突出关键链接及其补充细节。
+            2. 内容风格要沉浸感强，以丰富的描述突出角色的内心世界和外在表现,不能脱离违背人物已有信息。
+            3. 不要有标题。
 
             以下是角色信息：
             ${JSON.stringify(completeCharacterData, null, 2)}
@@ -114,7 +110,16 @@ const SummaryPage = () => {
 
       const result = await response.json();
       if (response.ok) {
-        setDescription(result.reply);
+        // 创建一个新变量存储API返回的描述
+        const newDescription = result.reply;
+        
+        // 首先保存到数据库
+        await saveDetailedDescription(currentCharacterId, formData.name, formData.gender, formData.residence, formData.birthplace, newDescription, 0);
+        console.log("描述已保存到数据库");
+        
+        // 然后更新状态
+        setDescription(newDescription);
+        console.log("生成描述成功:", newDescription);
       } else {
         console.error("生成描述失败:", result.error);
         setDescription("生成描述失败，请稍后再试。");
