@@ -28,6 +28,11 @@ const RandomEventsPage = () => {
       // 获取随机事件
       const event = await eventGenerator.handleGenerateEvents(mapId);
       console.log('生成的事件:', event);
+      if(event === null) {
+        console.warn('未生成事件');
+        //----------------------------------
+        return;
+      }
       // 清理 result 数据，去除不可见字符（如换行符、回车符、制表符）
       const cleanResult = (result) => {
         result = result.replace(/[\n\r\t]+/g, ''); // 替换掉换行符、回车符和制表符
