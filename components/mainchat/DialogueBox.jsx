@@ -73,7 +73,7 @@ export default function DialogueBox({ messages, setMessages, className = '' }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            className="flex-1 bg-slate-900/50 border border-emerald-900/30 rounded-lg px-4 py-2 text-emerald-400 focus:outline-none focus:border-emerald-700/50"
+            className="flex-1 bg-slate-700/50 border border-emerald-900/30 rounded-lg px-4 py-2 text-emerald-500 focus:outline-none focus:border-emerald-700/50"
             placeholder="输入内容..."
           />
           <button

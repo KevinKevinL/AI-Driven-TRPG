@@ -59,7 +59,7 @@ export default function CharacterCard({ title }) {
   }, []);
 
   if (loading) {
-    return <p className="text-emerald-300">加载中...</p>;
+    return <p className="text-emerald-900">加载中...</p>;
   }
 
   if (error) {
@@ -67,7 +67,7 @@ export default function CharacterCard({ title }) {
   }
 
   if (!characterData) {
-    return <p className="text-emerald-300">未找到角色数据</p>;
+    return <p className="text-emerald-900">未找到角色数据</p>;
   }
 
   const { attributes, derivedAttributes, skills, characterInfo } = characterData;
@@ -77,10 +77,10 @@ export default function CharacterCard({ title }) {
       {/* Card Content */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-emerald-400">{characterInfo?.name || '未知'}</h2>
+          <h2 className="text-xl font-bold text-emerald-900">{characterInfo?.name || '未知'}</h2>
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="text-emerald-900 hover:text-emerald-900 transition-colors"
           >
             <List size={24} />
           </button>
@@ -102,24 +102,24 @@ export default function CharacterCard({ title }) {
           {/* Basic Status Info */}
           <div className="flex flex-col justify-center gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-emerald-300">生命值:</span>
+              <span className="text-emerald-900">生命值:</span>
               <div className="w-32 h-4 bg-slate-700/50 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-red-500 transition-all duration-300" 
                   style={{width: `${(derivedAttributes?.hitPoints || 0) / derivedAttributes?.hitPoints * 100}%`}}
                 ></div>
               </div>
-              <span className="text-emerald-300">{derivedAttributes?.hitPoints || 0}/{derivedAttributes?.hitPoints}</span>
+              <span className="text-emerald-900">{derivedAttributes?.hitPoints || 0}/{derivedAttributes?.hitPoints}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-emerald-300">理智值:</span>
+              <span className="text-emerald-900">理智值:</span>
               <div className="w-32 h-4 bg-slate-700/50 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-blue-500 transition-all duration-300" 
                   style={{width: `${(derivedAttributes?.sanity || 0) / derivedAttributes?.sanity * 100}%`}}
                 ></div>
               </div>
-              <span className="text-emerald-300">{derivedAttributes?.sanity || 0}/{derivedAttributes?.sanity}</span>
+              <span className="text-emerald-900">{derivedAttributes?.sanity || 0}/{derivedAttributes?.sanity}</span>
             </div>
           </div>
         </div>
