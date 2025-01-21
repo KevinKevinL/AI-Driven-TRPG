@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import DialogueBox from '@components/mainchat/DialogueBox';
 import CharacterCard from '@components/mainchat/CharacterCard';
+import CharacterStatus from '@components/mainchat/CharacterStatus';
 import DicePanel from '@components/mainchat/DicePanel';
 import Panel from '@components/mainchat/Panel';
 import Image from 'next/image';
@@ -71,19 +72,24 @@ export default function MainPlay() {
         </div>
 
         {/* Right Panel Section */}
-        <div className="w-64 p-4 space-y-4 bg-slate-900/60 backdrop-blur-sm">
+        <div className="w-64 p-4 space-y-4 bg-slate-900/60 backdrop-blur-sm flex flex-col">
           <div className="bg-emerald-0 rounded-lg">
             <DicePanel />
           </div>
           <div className="bg-emerald-0 rounded-lg">
             <Panel title="快捷操作" />
           </div>
+          {/* Add flex-grow to push the character status to the bottom */}
+          <div className="flex-grow"></div>
+          <div className="bg-emerald-0 rounded-lg">
+            <CharacterStatus />
+          </div>
         </div>
       </div>
 
       {/* Modal */}
       <div 
-        className={`fixed inset-y-0 left-0 z-50 w-2/5 transition-transform duration-300 ease-in-out transform ${
+        className={`fixed inset-y-0 left-0 z-50 w-3/7 transition-transform duration-300 ease-in-out transform ${
           isModalOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
