@@ -40,7 +40,7 @@ export default function CharacterCard({ title }) {
   const { attributes, derivedAttributes, skills, characterInfo } = characterData;
 
   return (
-    <div className="pl-20 pt-8">
+    <div className="pl-28 pt-8">
       {/* Card Content */}
       <div>
         <div className="flex justify-between items-center mb-4">
