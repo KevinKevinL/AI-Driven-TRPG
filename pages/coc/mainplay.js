@@ -13,7 +13,6 @@ export default function MainPlay() {
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Handle ESC key press
   useEffect(() => {
     const handleEsc = (event) => {
       if (event.keyCode === 27) {
@@ -33,7 +32,7 @@ export default function MainPlay() {
         {/* Left Chat Section */}
         <div className="flex-1 relative">
           {/* Top Bar */}
-          <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center">
+          <div className="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-center">
             <button 
               className="p-2 rounded-lg bg-emerald-800/80 hover:bg-emerald-700/80 transition-colors"
               onClick={() => setIsModalOpen(true)}
@@ -43,33 +42,29 @@ export default function MainPlay() {
             <div className="text-emerald-700/80 font-lovecraft">CALL OF CTHULHU</div>
           </div>
 
-          {/* Chat Area */}
-          <div className="h-full relative pt-16 px-6 pb-6">
-            <div className="h-full flex flex-col">
-              {/* Chat Interface with Background */}
-              <div className="flex-1 relative rounded-lg overflow-hidden">
-                {/* Background Image */}
-                <div className="absolute inset-0">
-                  <Image
-                    src="/images/forest-background.png"
-                    alt="Forest Background"
-                    fill
-                    className="object-cover opacity-100"
-                    priority
-                    quality={100}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 to-slate-950/60" />
-                  <RainEffect intensity={3} color="rgba(204, 230, 255, 0.4)" speed={70} />
-                </div>
-
-                {/* DialogueBox with transparent background */}
-                <div className="relative h-full bg-slate-90/60 backdrop-blur-sm">
-                  <DialogueBox
-                    messages={messages}
-                    setMessages={setMessages}
-                    className="h-full"
-                  />
-                </div>
+          {/* Main Chat Container */}
+          <div className="absolute inset-0 pt-16 px-6 pb-6">
+            <div className="relative h-full rounded-lg overflow-hidden">
+              {/* Background Image Layer */}
+              <div className="absolute inset-0">
+                <Image
+                  src="/images/forest-background.png"
+                  alt="Forest Background"
+                  fill
+                  className="object-cover object-bottom"
+                  priority
+                  quality={100}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 to-slate-950/60" />
+                <RainEffect intensity={3} color="rgba(204, 230, 255, 0.4)" speed={70} />
+              </div>
+              
+              {/* Chat Interface Layer */}
+              <div className="relative h-full z-10">
+                <DialogueBox
+                  messages={messages}
+                  setMessages={setMessages}
+                />
               </div>
             </div>
           </div>
@@ -77,12 +72,9 @@ export default function MainPlay() {
 
         {/* Right Panel Section */}
         <div className="w-64 p-4 space-y-4 bg-slate-900/60 backdrop-blur-sm">
-          {/* Dice Panel */}
           <div className="bg-emerald-0 rounded-lg">
             <DicePanel />
           </div>
-
-          {/* Quick Actions Panel */}
           <div className="bg-emerald-0 rounded-lg">
             <Panel title="快捷操作" />
           </div>
@@ -95,9 +87,7 @@ export default function MainPlay() {
           isModalOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Modal Content */}
         <div className="relative h-full w-full">
-          {/* Close Button */}
           <button
             className="absolute top-4 right-4 z-10 p-1 rounded-full bg-emerald-800/80 hover:bg-emerald-700/80 transition-colors"
             onClick={() => setIsModalOpen(false)}
@@ -105,7 +95,6 @@ export default function MainPlay() {
             <X className="text-white" size={20} />
           </button>
 
-          {/* Paper Background */}
           <div className="absolute inset-0">
             <Image
               src="/images/takingthepad2.png"
@@ -118,9 +107,7 @@ export default function MainPlay() {
             <div className="absolute inset-0 bg-emerald-10/40" />
           </div>
 
-          {/* Content Container */}
           <div className="relative h-full p-6 pt-4 pl-12 overflow-y-auto">
-            {/* Character Status */}
             <div className="mb-8 ml-auto mr-2 pl-12">
               <CharacterCard />
             </div>
@@ -128,7 +115,6 @@ export default function MainPlay() {
         </div>
       </div>
 
-      {/* Backdrop */}
       {isModalOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300"
