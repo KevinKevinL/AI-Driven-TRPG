@@ -61,3 +61,8 @@ tsconfig.tsbuildinfo
 # /utils
 # /styles
 # /constants
+
+.env
+package-lock.json
+package.json
+pages/api/db.js
