@@ -34,16 +34,28 @@
     "ts-node": "^10.9.1"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.32",
+    "@langchain/openai": "^0.3.17",
+    "@langchain/textsplitters": "^0.1.0",
     "@openzeppelin/contracts": "5.0.0",
     "@pinata/sdk": "^2.1.0",
     "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
     "ethers": "^6.13.4",
+    "langchain": "^0.3.11",
     "lucide-react": "^0.456.0",
     "mysql2": "^3.11.5",
+    "openai": "^4.79.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-markdown": "^9.0.1",
+    "react-markdown": "^9.0.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
