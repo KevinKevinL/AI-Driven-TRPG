@@ -34,7 +34,8 @@
     "ts-node": "^10.9.1"
   },
   "dependencies": {
-    "@langchain/core": "^0.3.32",
+    "@langchain/community": "^0.3.26",
+    "@langchain/core": "^0.3.33",
     "@langchain/openai": "^0.3.17",
     "@langchain/textsplitters": "^0.1.0",
     "@openzeppelin/contracts": "5.0.0",
@@ -46,6 +47,7 @@
     "lucide-react": "^0.456.0",
     "mysql2": "^3.11.5",
     "openai": "^4.79.0",
+    "pdf-parse": "^1.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^9.0.3",

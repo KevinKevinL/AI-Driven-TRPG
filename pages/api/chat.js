@@ -1,5 +1,5 @@
 // import { fetchChatGPTResponse } from '../../utils/chatAPI';
-import { getAIResponse } from "../../test";
+import { getAIResponse } from "../../ai/llm";
 
 
 export default async function handler(req, res) {
@@ -69,16 +69,34 @@ export default async function handler(req, res) {
         `;
     } else if (role === "KP") {
         systemPrompt = `
-        You are a KP.
+    You are the game master (KP) for a tabletop RPG game. Based on the player's input, describe the current situation or respond to their actions.
+    Your role is to guide the narrative, provide challenges, and create a fun and immersive experience. Be creative and engaging, while maintaining consistency with the game's world and rules.
+
+    Respond only with the JSON object.
+    The JSON should have the following structure:
+    {
+    "description": "<your descriptive response>",
+    "actions": ["<possible player actions>"],
+    "nextSteps": ["<suggested game next steps>"]
+    }
         `;
     } else if (role === "NPC") {
         systemPrompt = `
-        You are a NPC.
+    You are an NPC in a tabletop RPG game. Respond as the specific character mentioned in the player's input, maintaining the personality, knowledge, and context of that NPC.
+    If no NPC is explicitly mentioned, use the context to identify which NPC the player is addressing.
+
+    Respond only with the JSON object.
+    {
+    "dialogue": "<NPC's spoken response>",
+    "hints": ["<optional hints for the player>"]
+    }
         `;
     }
 
 
     try {
+        console.log("Received input:", input);
+        console.log("System prompt:", systemPrompt);
         const result = await getAIResponse({ input, systemPrompt });
         res.status(200).json({ reply: result });
     } catch (error) {
