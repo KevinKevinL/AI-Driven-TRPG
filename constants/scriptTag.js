@@ -1,0 +1,41 @@
+// constants/scriptTag.js
+
+export const tagOptions = [
+    { value: "喜剧", label: "喜剧" },
+    { value: "爱情", label: "爱情" },
+    { value: "动作", label: "动作" },
+    { value: "犯罪", label: "犯罪" },
+    { value: "科幻", label: "科幻" },
+    { value: "奇幻", label: "奇幻" },
+    { value: "冒险", label: "冒险" },
+    { value: "灾难", label: "灾难" },
+    { value: "恐怖", label: "恐怖" },
+    { value: "惊悚", label: "惊悚" },
+    { value: "剧情", label: "剧情" },
+    { value: "战争", label: "战争" },
+    { value: "歌舞", label: "歌舞" },
+    { value: "经典", label: "经典" },
+    { value: "悬疑", label: "悬疑" },
+    { value: "动画", label: "动画" },
+    { value: "同性", label: "同性" },
+    { value: "网络电影", label: "网络电影" },
+    { value: "赛博朋克", label: "赛博朋克" },
+    { value: "神秘学", label: "神秘学" },
+    { value: "蒸汽朋克", label: "蒸汽朋克" },
+    { value: "克苏鲁", label: "克苏鲁" },
+    { value: "心理", label: "心理" },
+    { value: "黑色幽默", label: "黑色幽默" },
+    { value: "历史", label: "历史" },
+    { value: "玄幻", label: "玄幻" },
+    { value: "西部", label: "西部" },
+    { value: "传记", label: "传记" },
+    { value: "武侠", label: "武侠" },
+    { value: "仙侠", label: "仙侠" },
+    { value: "现实主义", label: "现实主义" },
+    { value: "文艺", label: "文艺" },
+    { value: "社交推理", label: "社交推理" },
+    { value: "沉浸本", label: "沉浸本" },
+    { value: "机制本", label: "机制本" }
+];
+  
+  

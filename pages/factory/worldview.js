@@ -1,19 +1,11 @@
 import React, { useState, useEffect } from "react"; 
 import Head from "next/head";
 import Link from "next/link";
-import Select from "react-select";
+import dynamic from "next/dynamic";
 import { script } from "@utils/scriptState"; // 全局状态管理对象
+import { tagOptions } from "@constants/scriptTag"; 
 
-const tagOptions = [
-  { value: "恐怖", label: "恐怖" },
-  { value: "科幻", label: "科幻" },
-  { value: "冒险", label: "冒险" },
-  { value: "奇幻", label: "奇幻" },
-  { value: "赛博朋克", label: "赛博朋克" },
-  { value: "神秘学", label: "神秘学" },
-  { value: "蒸汽朋克", label: "蒸汽朋克" },
-  { value: "克苏鲁", label: "克苏鲁" },
-];
+const Select = dynamic(() => import("react-select"), { ssr: false });
 
 const Worldview = () => {
     const [scriptName, setScriptName] = useState(script.scriptName || "");
@@ -73,7 +65,7 @@ const Worldview = () => {
             🎭 创作梦工厂
           </h1>
           <p className="text-center text-emerald-400/80 mt-2 font-lovecraft">
-            AI Co-Pilot 辅助您的剧本创作之旅
+            AI 辅助您的剧本创作之旅
           </p>
 
           <div className="mt-10">
@@ -183,8 +175,8 @@ const Worldview = () => {
           </div>
           <br></br>
           <div className="mb-4 p-4 bg-emerald-900/20 rounded-lg">
-            <h3 className="text-lg font-lovecraft text-emerald-400 mb-2">请完成以下内容：</h3>
-            <ul className="text-sm text-emerald-400/80 space-y-1">
+            <h3 className="text-lg font-bold font-lovecraft text-emerald-400 mb-2">请完成以下内容：</h3>
+            <ul className="text-sm font-lovecraft text-emerald-400 space-y-1">
               {["剧本名称", "至少选择一个标签", "剧本简介", "世界观描述"].map((field) => (
                 <li key={field} className={`flex items-center ${validationErrors.has(field) ? "text-red-400" : "text-emerald-500"}`}>
                     {validationErrors.has(field) ? "✗" : "✓"} {field}
@@ -193,7 +185,7 @@ const Worldview = () => {
             </ul>
           </div>
 
-          <div className="mt-8 text-center font-lovecraft">
+          <div className="mt-8 text-center font-bold font-lovecraft">
             <button
                 onClick={handleSave}
                 disabled={validationErrors.size > 0}
