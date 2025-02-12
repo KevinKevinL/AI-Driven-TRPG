@@ -1,3 +1,5 @@
+// components/mainchat/DialogueBox.jsx
+
 import { useState } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
