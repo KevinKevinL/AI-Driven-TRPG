@@ -1,5 +1,3 @@
-// components/mainchat/DialogueBox.jsx
-
 import { useState } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
@@ -7,7 +5,11 @@ import ReactMarkdown from "react-markdown";
 export default function DialogueBox({ messages, setMessages }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [npcChats, setNpcChats] = useState({}); // 用于存储 NPC 的聊天窗口
+  // npcChats 用于存储每个 NPC 的聊天记录，键为 NPC 名称，值为消息数组
+  const [npcChats, setNpcChats] = useState({});
+  // 用于控制当前激活的 NPC 聊天窗口
+  const [activeNpc, setActiveNpc] = useState(null);
+  const [showNpcModal, setShowNpcModal] = useState(false);
 
   const handleSend = async () => {
     if (input.trim() === "") return;
@@ -20,20 +22,23 @@ export default function DialogueBox({ messages, setMessages }) {
     try {
       const response = await axios.post("/api/chat", {
         input,
-        role: "KP", // 默认与 KP 聊天
+        role: "KP", // 使用 KP 身份对话
       });
 
-      const replyText = typeof response.data.reply === "object"
-        ? JSON.stringify(response.data.reply, null, 2)
-        : response.data.reply;
+      let reply;
+      // 如果回复为对象且含有 text 字段，则认为返回结构为 { text, talkRequired }
+      if (typeof response.data.reply === "object" && response.data.reply.text !== undefined) {
+        reply = response.data.reply;
+      } else {
+        reply = { text: response.data.reply, talkRequired: [] };
+      }
 
-      const gptReply = { sender: "KP", text: replyText };
+      const gptReply = { sender: "KP", text: reply.text };
       setMessages((prev) => [...prev, gptReply]);
 
-      // 如果需要与 NPC 对话，处理 talkRequired
-      const replyData = typeof response.data.reply === "object" ? response.data.reply : {};
-      if (replyData.talkRequired && Array.isArray(replyData.talkRequired)) {
-        replyData.talkRequired.forEach((npcName) => {
+      // 如果回复中包含 talkRequired 数组，则更新 npcChats 中对应 NPC
+      if (reply.talkRequired && Array.isArray(reply.talkRequired)) {
+        reply.talkRequired.forEach((npcName) => {
           if (!npcChats[npcName]) {
             setNpcChats((prev) => ({
               ...prev,
@@ -66,9 +71,10 @@ export default function DialogueBox({ messages, setMessages }) {
         role: "NPC",
       });
 
-      const replyText = typeof response.data.reply === "object"
-        ? JSON.stringify(response.data.reply, null, 2)
-        : response.data.reply;
+      const replyText =
+        typeof response.data.reply === "object"
+          ? JSON.stringify(response.data.reply, null, 2)
+          : response.data.reply;
 
       const gptReply = { sender: npcName, text: replyText };
       setNpcChats((prev) => ({
@@ -92,16 +98,26 @@ export default function DialogueBox({ messages, setMessages }) {
     }
   };
 
+  // 打开 NPC 聊天弹窗
+  const openNpcModal = (npcName) => {
+    setActiveNpc(npcName);
+    setShowNpcModal(true);
+  };
+
+  // 关闭 NPC 聊天弹窗
+  const closeNpcModal = () => {
+    setShowNpcModal(false);
+    setActiveNpc(null);
+  };
+
   return (
     <div className="flex flex-col h-full rounded-lg">
-      {/* 消息显示区域 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 font-lovecraft">
+      {/* 主聊天区域（KP 对话） */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 font-lovecraft custom-scrollbar">
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`flex ${
-              msg.sender === "KP" ? "justify-start" : "justify-end"
-            }`}
+            className={`flex ${msg.sender === "KP" ? "justify-start" : "justify-end"}`}
           >
             <div
               className={`p-3 rounded-xl max-w-[70%] shadow-lg ${
@@ -122,49 +138,73 @@ export default function DialogueBox({ messages, setMessages }) {
         )}
       </div>
 
-      {/* NPC 聊天窗口 */}
-      {Object.keys(npcChats).map((npcName) => (
-        <div key={npcName} className="p-4 border-t border-emerald-900/30">
-          <h3 className="text-emerald-400">与 {npcName} 对话:</h3>
-          <div className="space-y-2">
-            {npcChats[npcName].map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${
-                  msg.sender === npcName ? "justify-start" : "justify-end"
-                }`}
-              >
+      {/* 如果有 NPC 对话，则显示按钮打开对应 NPC 聊天弹窗 */}
+      {Object.keys(npcChats).length > 0 && (
+        <div className="p-4 flex space-x-4">
+          {Object.keys(npcChats).map((npcName) => (
+            <button
+              key={npcName}
+              onClick={() => openNpcModal(npcName)}
+              className="px-4 py-2 bg-emerald-900/50 text-emerald-400 rounded hover:bg-emerald-800/50"
+            >
+              与 {npcName} 对话
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* NPC 聊天弹窗 */}
+      {showNpcModal && activeNpc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-slate-800 p-6 rounded-lg w-11/12 max-w-md relative">
+            <button
+              onClick={closeNpcModal}
+              className="absolute top-2 right-2 text-emerald-400 hover:text-emerald-200"
+            >
+              关闭
+            </button>
+            <h3 className="text-2xl font-bold text-emerald-400 mb-4">
+              与 {activeNpc} 对话
+            </h3>
+            <div className="h-64 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+              {npcChats[activeNpc].map((msg, idx) => (
                 <div
-                  className={`p-3 rounded-xl max-w-[70%] shadow-lg ${
-                    msg.sender === npcName
-                      ? "bg-emerald-950/60 text-emerald-400 backdrop-blur-sm"
-                      : "bg-emerald-900/60 text-emerald-300 backdrop-blur-sm"
-                  }`}
+                  key={idx}
+                  className={`flex ${msg.sender === activeNpc ? "justify-start" : "justify-end"}`}
                 >
-                  <strong className="block mb-1">{msg.sender}:</strong>
-                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  <div
+                    className={`p-2 rounded max-w-[80%] shadow ${
+                      msg.sender === activeNpc
+                        ? "bg-emerald-950/60 text-emerald-400"
+                        : "bg-emerald-900/60 text-emerald-300"
+                    }`}
+                  >
+                    <strong className="block mb-1">{msg.sender}:</strong>
+                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center mt-2">
-            <input
-              type="text"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleNpcSend(npcName, e.target.value);
-                  e.target.value = "";
-                }
-              }}
-              className="flex-1 bg-emerald-900/20 border border-emerald-900/30 rounded-lg px-4 py-2 text-emerald-400 focus:outline-none"
-              placeholder={`对 ${npcName} 说点什么...`}
-            />
+              ))}
+            </div>
+            <div className="flex items-center mt-4">
+              <input
+                type="text"
+                placeholder="输入内容..."
+                className="flex-1 bg-emerald-900/20 border border-emerald-900/30 rounded-lg px-4 py-2 text-emerald-400 focus:outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    const inputValue = e.target.value;
+                    handleNpcSend(activeNpc, inputValue);
+                    e.target.value = "";
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
-      ))}
+      )}
 
-      {/* 输入区域 */}
+      {/* KP 输入区域 */}
       <div className="flex items-center p-4 border-t border-emerald-900/30 bg-black/40 backdrop-blur-sm rounded-b-lg">
         <input
           type="text"
@@ -177,12 +217,11 @@ export default function DialogueBox({ messages, setMessages }) {
         <button
           onClick={handleSend}
           disabled={loading}
-          className={`ml-4 px-4 py-2 rounded-lg font-semibold tracking-wide transition-all
-            ${
-              loading
-                ? "bg-slate-800/50 text-slate-500 cursor-not-allowed"
-                : "bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50"
-            }`}
+          className={`ml-4 px-4 py-2 rounded-lg font-semibold tracking-wide transition-all ${
+            loading
+              ? "bg-slate-800/50 text-slate-500 cursor-not-allowed"
+              : "bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50"
+          }`}
         >
           发送
         </button>
