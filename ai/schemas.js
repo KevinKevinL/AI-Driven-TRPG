@@ -18,3 +18,13 @@ export const npcSchema = z.object({
   dialogue: z.string(),
   hints: z.array(z.string()),
 });
+
+// 已有的 storySchema
+export const storySchema = z.object({
+  description: z.string(),
+});
+
+// 新增：角色描述专用 Schema
+export const characterDescriptionSchema = z.object({
+  description: z.string(),
+});

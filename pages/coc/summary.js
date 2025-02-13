@@ -1,9 +1,13 @@
+// pages/coc/summary.js
+
 import React, { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import DatabaseManager from "@components/coc/DatabaseManager";
 import { character } from "@utils/characterState";
+
+import { fetchCharacterDescription } from "../../utils/chatAPI";
 
 const SummaryPage = () => {
   const [characterData, setCharacterData] = useState(null);
@@ -17,7 +21,7 @@ const SummaryPage = () => {
   const [errors, setErrors] = useState({});
   const [description, setDescription] = useState("");
   const [generating, setGenerating] = useState(false);
-  const { currentCharacterId, loadBackground, saveDetailedDescription} = DatabaseManager();
+  const { currentCharacterId, loadBackground, saveDetailedDescription } = DatabaseManager();
 
   useEffect(() => {
     const fetchCharacterData = async () => {
@@ -49,14 +53,13 @@ const SummaryPage = () => {
   const validateForm = () => {
     const newErrors = {};
     Object.entries(formData).forEach(([key, value]) => {
-      // 确保 value 是字符串并且非空
       if (!value || typeof value !== "string" || !value.trim()) {
         newErrors[key] = "此项为必填";
       }
     });
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };  
+  };
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -80,46 +83,33 @@ const SummaryPage = () => {
         metadata: formData,
       };
 
-      const messages = [
-        {
-          role: "system",
-          content: "你是一个帮助跑团玩家创建角色描述的助手。",
-        },
-        {
-          role: "user",
-          content: `
-            请根据以下角色信息生成一个完整的人物描述，用于克苏鲁的呼唤跑团游戏。描述格式如下：
+      // 构造用于生成角色描述的提示字符串
+      const prompt = `
+请根据以下角色信息生成一个完整的人物描述，用于克苏鲁的呼唤跑团游戏。描述应涵盖角色的背景、性格、特质、技能等，并且风格沉浸、有理有据。请确保描述与角色信息匹配，不要添加虚假信息。
 
-            1. 主要内容分为若干段落，例如角色的背景、性格、特质、技能等，描述要有理有据，重点突出关键链接及其补充细节。
-            2. 内容风格要沉浸感强，以丰富的描述突出角色的内心世界和外在表现,不能脱离违背人物已有信息。
-            3. 不要有标题。
+角色信息：
+${JSON.stringify(completeCharacterData, null, 2)}
+      `;
 
-            以下是角色信息：
-            ${JSON.stringify(completeCharacterData, null, 2)}
-          `,
-        },
-      ];
+      // 调用独立的 AI 接口生成角色描述
+      const result = await fetchCharacterDescription(prompt);
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ messages }),
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        // 创建一个新变量存储API返回的描述
-        const newDescription = result.reply;
-        
-        // 首先保存到数据库
-        await saveDetailedDescription(currentCharacterId, formData.name, formData.gender, formData.residence, formData.birthplace, newDescription, 0);
+      if (result && result.description) {
+        // 保存到数据库
+        await saveDetailedDescription(
+          currentCharacterId,
+          formData.name,
+          formData.gender,
+          formData.residence,
+          formData.birthplace,
+          result.description,
+          0
+        );
         console.log("描述已保存到数据库");
-        
-        // 然后更新状态
-        setDescription(newDescription);
-        console.log("生成描述成功:", newDescription);
+
+        // 更新状态
+        setDescription(result.description);
+        console.log("生成描述成功:", result.description);
       } else {
         console.error("生成描述失败:", result.error);
         setDescription("生成描述失败，请稍后再试。");
@@ -157,8 +147,7 @@ const SummaryPage = () => {
                 characterId: currentCharacterId,
               },
             }}
-            className="inline-block mb-6 text-emerald-400 hover:text-emerald-300 
-                     transition-colors font-lovecraft tracking-wider"
+            className="inline-block mb-6 text-emerald-400 hover:text-emerald-300 transition-colors font-lovecraft tracking-wider"
           >
             ← 返回背景编辑
           </Link>
@@ -200,10 +189,7 @@ const SummaryPage = () => {
               <button
                 onClick={handleGenerateDescription}
                 disabled={generating}
-                className="px-6 py-3 bg-emerald-900/30 hover:bg-emerald-800/30 
-                                rounded-lg border border-emerald-900/30 
-                                transition-colors text-emerald-400 text-lg font-lovecraft 
-                                disabled:bg-slate-800 disabled:text-emerald-700 shadow-ld"
+                className="px-6 py-3 bg-emerald-900/30 hover:bg-emerald-800/30 rounded-lg border border-emerald-900/30 transition-colors text-emerald-400 text-lg font-lovecraft disabled:bg-slate-800 disabled:text-emerald-700 shadow-ld"
               >
                 {generating ? "正在生成..." : "生成完整人物描述"}
               </button>
@@ -216,11 +202,7 @@ const SummaryPage = () => {
                 人物描述
               </h2>
               <div className="text-emerald-400 whitespace-pre-line">
-                <ReactMarkdown
-                  // components={{
-                  //   h3: ({ node, ...props }) => <div {...props} />,
-                  // }}
-                >{description}</ReactMarkdown>
+                <ReactMarkdown>{description}</ReactMarkdown>
               </div>
             </div>
           )}
