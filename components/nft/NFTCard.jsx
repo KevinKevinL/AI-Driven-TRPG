@@ -1,15 +1,116 @@
 import React, { useState, useEffect } from 'react';
 
-const StatDisplay = ({ label, value, color = "text-blue-600" }) => (
-  <div className="flex items-center space-x-1">
-    <span className="text-gray-700 font-medium">{label}</span>
-    <span className={`${color} font-bold`}>{value}</span>
-  </div>
-);
+// Modal Component
+const CharacterModal = ({ isOpen, onClose, metadata, onSelect, isSelected }) => {
+  if (!isOpen || !metadata) return null;
 
-const NFTCard = ({ nft }) => {
+  const { characteristics, derived } = metadata.attributes;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+         onClick={onClose}>
+      <div className="max-w-4xl w-full bg-[#0a0d11] border border-emerald-900/30 rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto"
+           onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="border-b border-emerald-900/30 pb-4 mb-4">
+          <h2 className="text-2xl font-bold text-emerald-500 font-lovecraft tracking-wider">{metadata.name}</h2>
+          <div className="mt-2 grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-emerald-400"><span className="text-emerald-300">Gender:</span> {metadata.gender}</p>
+              <p className="text-emerald-400"><span className="text-emerald-300">Residence:</span> {metadata.residence}</p>
+            </div>
+            <div>
+              <p className="text-emerald-400"><span className="text-emerald-300">Birthplace:</span> {metadata.birthplace}</p>
+              <p className="text-emerald-400"><span className="text-emerald-300">Type:</span> {metadata.ifNpc ? 'NPC' : 'PC'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-emerald-400 mb-2 font-lovecraft">Description</h3>
+          <p className="text-emerald-300/80 leading-relaxed">{metadata.description}</p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Characteristics */}
+          <div className="bg-emerald-900/10 rounded-lg p-4 border border-emerald-900/30">
+            <h3 className="text-lg font-bold text-emerald-400 mb-4 font-lovecraft">Characteristics</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {characteristics && Object.entries(characteristics).map(([key, value]) => (
+                <div key={key} className="flex justify-between">
+                  <span className="text-emerald-300">{key.toUpperCase()}</span>
+                  <span className="text-emerald-400">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Derived Stats */}
+          <div className="bg-emerald-900/10 rounded-lg p-4 border border-emerald-900/30">
+            <h3 className="text-lg font-bold text-emerald-400 mb-4 font-lovecraft">Derived Stats</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {derived && Object.entries(derived).map(([key, value]) => (
+                <div key={key} className="flex justify-between">
+                  <span className="text-emerald-300">{key.toUpperCase()}</span>
+                  <span className={key === 'hp' ? 'text-red-400' : 
+                                 key === 'mp' ? 'text-blue-400' : 
+                                 key === 'sanity' ? 'text-purple-400' : 'text-emerald-400'}>
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Skills */}
+        {metadata.skills && (
+          <div className="mt-6 bg-emerald-900/10 rounded-lg p-4 border border-emerald-900/30">
+            <h3 className="text-lg font-bold text-emerald-400 mb-4 font-lovecraft">Skills</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {Object.entries(metadata.skills).map(([key, value]) => (
+                <div key={key} className="flex justify-between">
+                  <span className="text-emerald-300">{key.replace('_', ' ')}</span>
+                  <span className="text-emerald-400">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="mt-6 grid grid-cols-2 gap-4">
+          <button
+            onClick={() => onSelect?.()}
+            className={`px-4 py-2 rounded-lg font-lovecraft tracking-wide transition-colors
+                     ${isSelected 
+                       ? 'bg-emerald-600/50 text-emerald-300 border-emerald-600/50' 
+                       : 'bg-emerald-900/50 text-emerald-400 border-emerald-900/30 hover:bg-emerald-800/50'} 
+                     border`}
+          >
+            {isSelected ? 'Selected Investigator' : 'Select as Investigator'}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-emerald-900/50 text-emerald-400 rounded-lg 
+                     hover:bg-emerald-800/50 transition-colors border border-emerald-900/30
+                     font-lovecraft tracking-wide"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Card Component
+const NFTCard = ({ nft, isSelected, onSelect }) => {
   const [metadata, setMetadata] = useState(null);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -28,7 +129,6 @@ const NFTCard = ({ nft }) => {
           url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
         }
 
-        console.log('Fetching metadata from:', url);
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
@@ -56,94 +156,74 @@ const NFTCard = ({ nft }) => {
 
   if (error) {
     return (
-      <div className="border rounded-lg p-4 shadow-lg bg-white w-full">
-        <p className="text-red-500">Error loading character card: {error}</p>
-        <p className="text-sm text-gray-500">Token ID: {nft.tokenId?.toString()}</p>
+      <div className="border border-red-900/30 rounded-lg p-4 shadow-lg bg-[#0a0d11] w-full">
+        <p className="text-red-400">Error loading character card: {error}</p>
       </div>
     );
   }
 
   if (!metadata) {
     return (
-      <div className="border rounded-lg p-4 shadow-lg bg-white w-full">
-        <p className="text-gray-500">Loading character card...</p>
+      <div className="border border-emerald-900/30 rounded-lg p-4 shadow-lg bg-[#0a0d11] w-full">
+        <p className="text-emerald-400/60">Loading character card...</p>
       </div>
     );
   }
 
-  const { characteristics, derived } = metadata.attributes;
-
   return (
-    <div className="border rounded-lg p-6 shadow-lg bg-white w-full min-w-[300px]">
-      {/* 角色卡片头部 */}
-      <div className="mb-4 border-b pb-4">
-        <h3 className="text-2xl font-bold mb-2">{metadata.name}</h3>
-        <div className="flex flex-wrap justify-between text-sm gap-2">
-          <span className="text-gray-600">{metadata.attributes.occupation}</span>
-          <div className="space-x-4">
-            <span className="text-gray-600">Age: {metadata.attributes.age}</span>
-            <span className="text-gray-600">Player: {metadata.attributes.player}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 角色图片 */}
-      {metadata.image && (
-        <div className="relative w-full h-60 mb-6">
-          <img
-            src={metadata.image}
-            alt={metadata.name || 'Character Image'}
-            className="w-full h-full object-cover rounded-lg"
-            onError={(e) => {
-              console.error('Image load error');
-              e.target.src = '/placeholder-image.png';
-            }}
-          />
-        </div>
-      )}
-
-      {/* 角色描述 */}
-      <p className="text-gray-700 mb-6 text-sm">{metadata.description}</p>
-
-      {/* 属性区域 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 基础属性 */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="font-bold text-sm mb-3 text-gray-700 border-b pb-2">Characteristics</h4>
-          <div className="grid grid-cols-1 gap-y-3">
-            {characteristics && Object.entries(characteristics).map(([key, value]) => (
-              <StatDisplay 
-                key={key}
-                label={key.toUpperCase()}
-                value={value}
-              />
-            ))}
+    <>
+      <div 
+        className={`border border-emerald-900/30 rounded-lg overflow-hidden bg-[#0a0d11] shadow-lg
+                   hover:border-emerald-600/50 transition-all cursor-pointer
+                   ${isSelected ? 'ring-2 ring-emerald-500 shadow-emerald-500/50 shadow-lg' : ''}`}
+        onClick={() => setIsModalOpen(true)}
+      >
+        {/* Preview Card Content */}
+        <div className="p-4">
+          <h3 className="text-xl font-bold text-emerald-500 font-lovecraft tracking-wider mb-2">
+            {metadata.name}
+          </h3>
+          <div className="grid grid-cols-2 gap-x-4 text-sm mb-4">
+            <p className="text-emerald-400">
+              <span className="text-emerald-300">Gender:</span> {metadata.gender}
+            </p>
+            <p className="text-emerald-400">
+              <span className="text-emerald-300">Birthplace:</span> {metadata.birthplace}
+            </p>
+            <p className="text-emerald-400">
+              <span className="text-emerald-300">Residence:</span> {metadata.residence}
+            </p>
+            <p className="text-emerald-400">
+              <span className="text-emerald-300">Type:</span> {metadata.ifNpc ? 'NPC' : 'PC'}
+            </p>
           </div>
         </div>
 
-        {/* 衍生属性 */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="font-bold text-sm mb-3 text-gray-700 border-b pb-2">Derived Stats</h4>
-          <div className="grid grid-cols-1 gap-y-3">
-            {derived && Object.entries(derived).map(([key, value]) => (
-              <StatDisplay 
-                key={key}
-                label={key.toUpperCase()}
-                value={value}
-                color={key === 'hp' ? 'text-red-600' : 
-                       key === 'mp' ? 'text-blue-600' : 
-                       key === 'sanity' ? 'text-purple-600' : 'text-gray-600'}
-              />
-            ))}
+        {/* Character Image */}
+        {metadata.image && (
+          <div className="w-full h-48 relative">
+            <img
+              src={metadata.image}
+              alt={metadata.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('Image load error');
+                e.target.src = '/placeholder-image.png';
+              }}
+            />
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Token ID */}
-      <div className="mt-6 pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-500">Token ID: {nft.tokenId?.toString()}</p>
-      </div>
-    </div>
+      {/* Detail Modal */}
+      <CharacterModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        metadata={metadata}
+        onSelect={onSelect}
+        isSelected={isSelected}
+      />
+    </>
   );
 };
 

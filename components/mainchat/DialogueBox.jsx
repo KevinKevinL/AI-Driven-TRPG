@@ -14,7 +14,7 @@ export default function DialogueBox({ messages, setMessages }) {
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    const userMessage = { sender: "玩家", text: input };
+    const userMessage = { sender: "Player", text: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
@@ -49,7 +49,7 @@ export default function DialogueBox({ messages, setMessages }) {
       }
     } catch (error) {
       console.error("Error calling ChatGPT API:", error);
-      const errorMessage = { sender: "系统", text: "错误：无法连接到服务器。" };
+      const errorMessage = { sender: "System", text: "Error: Unable to connect to server." };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
@@ -59,7 +59,7 @@ export default function DialogueBox({ messages, setMessages }) {
   const handleNpcSend = async (npcName, npcInput) => {
     if (npcInput.trim() === "") return;
 
-    const npcMessage = { sender: "玩家", text: npcInput };
+    const npcMessage = { sender: "Player", text: npcInput };
     setNpcChats((prev) => ({
       ...prev,
       [npcName]: [...prev[npcName], npcMessage],
@@ -83,7 +83,7 @@ export default function DialogueBox({ messages, setMessages }) {
       }));
     } catch (error) {
       console.error("Error calling ChatGPT API:", error);
-      const errorMessage = { sender: "系统", text: "错误：无法连接到服务器。" };
+      const errorMessage = { sender: "System", text: "Error: Unable to connect to server." };
       setNpcChats((prev) => ({
         ...prev,
         [npcName]: [...prev[npcName], errorMessage],
@@ -121,7 +121,7 @@ export default function DialogueBox({ messages, setMessages }) {
           >
             <div
               className={`p-3 rounded-xl max-w-[70%] shadow-lg ${
-                msg.sender === "KP"
+                msg.sender === "GM"
                   ? "bg-emerald-950/60 text-emerald-400 backdrop-blur-sm"
                   : "bg-emerald-900/60 text-emerald-300 backdrop-blur-sm"
               }`}
@@ -133,7 +133,7 @@ export default function DialogueBox({ messages, setMessages }) {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="text-emerald-500 text-sm">KP 正在输入...</div>
+            <div className="text-emerald-500 text-sm">GM is typing...</div>
           </div>
         )}
       </div>
@@ -212,7 +212,7 @@ export default function DialogueBox({ messages, setMessages }) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyPress}
           className="flex-1 bg-emerald-900/20 border border-emerald-900/30 rounded-lg px-4 py-2 text-emerald-400 focus:outline-none"
-          placeholder="输入内容..."
+          placeholder="Enter your message..."
         />
         <button
           onClick={handleSend}
@@ -223,7 +223,7 @@ export default function DialogueBox({ messages, setMessages }) {
               : "bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50"
           }`}
         >
-          发送
+          Send
         </button>
       </div>
     </div>
