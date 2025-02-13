@@ -1,8 +1,11 @@
+// pages/coc/randomEvents.js
+
 import React, { useState } from 'react';
 import { useRandomEventGenerator } from '@/components/mainchat/RandomEventGenerator';
 import { DiceSystem } from '@utils/diceSystem';
 import DatabaseManager from '@components/coc/DatabaseManager';
-import { fetchChatGPTResponse } from '../../utils/chatAPI';
+// 保留原有 fetchChatGPTResponse 如有其他用途
+import { fetchChatGPTResponse, fetchStoryDescription } from '../../utils/chatAPI';
 import { calculateDerivedValues } from '@components/coc/AttributeBox';
 
 const RandomEventsPage = () => {
@@ -17,27 +20,16 @@ const RandomEventsPage = () => {
     setLoading(true);
     setError(null);
     
-    // try {
-    //   const events = await eventGenerator.handleGenerateEvents(mapId);
-    //   setOccurredEvents(events);
-    // } catch (err) {
-    //   setError(err.message);
-    //   console.error('生成事件时出错:', err);
-    // } finally {
-    //   setLoading(false);
-    // }
     try {
       // 获取随机事件
       const event = await eventGenerator.handleGenerateEvents(mapId);
       if (!event) {
         console.error('未找到任何事件');
-        // setOccurredEvents(null);
         return;
       }
       console.log('生成的事件:', event);
-      if(event === null) {
+      if (event === null) {
         console.warn('未生成事件');
-        //----------------------------------
         return;
       }
       // 清理 result 数据，去除不可见字符（如换行符、回车符、制表符）
@@ -47,9 +39,8 @@ const RandomEventsPage = () => {
       };
 
       // 解析和处理逻辑
-      const processedEvent = await(async () => {
+      const processedEvent = await (async () => {
         try {
-
           if (!event.result) {
             console.warn(`事件 ID: ${event.id} 的 result 字段为空或未定义`);
             return {
@@ -71,7 +62,7 @@ const RandomEventsPage = () => {
           let testDescription = '无需鉴定';
           let roll = 0;
           let checkResult = null; // 默认为 null
-          let chatGPTPrompt = ""; // 用于发送给 chatGPT 的内容
+          let chatGPTPrompt = ""; // 用于发送给 AI 的提示内容
 
           if (resultData.testRequired > 0) {
             // 进行检定，掷出随机值
@@ -92,25 +83,25 @@ const RandomEventsPage = () => {
               if (roll <= attributeValue) {
                 checkResult = '检定成功';
                 testDescription = `掷骰结果: ${roll}（需要检定技能: ${attribute.label}）`;
-                // 发送成功效果给 chatGPT 生成故事描述
+                // 成功时的故事描述提示
                 chatGPTPrompt = `${event.event_info} 成功效果: ${resultData.successEffect}`;
               } else {
                 checkResult = '检定失败';
                 testDescription = `掷骰结果: ${roll}（需要检定技能: ${attribute.label}）`;
-                // 发送失败效果给 chatGPT 生成故事描述
+                // 失败时的故事描述提示
                 chatGPTPrompt = `${event.event_info} 失败效果: ${resultData.failEffect}`;
               }
             } else {
               checkResult = '未找到角色的属性值';
               chatGPTPrompt = `${attribute.label} 无法进行检定，因为找不到角色的属性值。`;
             }
+          } else {
+            // 无需检定时直接使用事件信息作为提示
+            chatGPTPrompt = event.event_info;
           }
 
-          // 调用 fetchChatGPTResponse 生成完整的故事描述
-          const chatGPTResponse = await fetchChatGPTResponse([{
-            role: "user",
-            content: chatGPTPrompt
-          }]);
+          // 调用独立的 AI 接口生成故事描述
+          const storyResult = await fetchStoryDescription(chatGPTPrompt);
 
           return {
             ...event,
@@ -118,7 +109,10 @@ const RandomEventsPage = () => {
             testDescription, // 鉴定逻辑的结果
             roll, // 返回的随机值
             checkResult, // 检定结果（成功/失败/未找到属性）
-            chatGPTResponse: chatGPTResponse.reply || "未能生成完整的故事描述", // 获取 GPT 的回应
+            // 从返回的结果中取 description 字段作为生成的故事描述
+            chatGPTResponse: storyResult.story && storyResult.story.description
+              ? storyResult.story.description
+              : "未能生成完整的故事描述",
           };
         } catch (err) {
           console.error('解析 result 字段失败:', err);
@@ -157,7 +151,6 @@ const RandomEventsPage = () => {
     } finally {
       setLoading(false);
     }
-    
   };
 
   return (
@@ -208,7 +201,7 @@ const RandomEventsPage = () => {
                 <p className="text-green-600">{occurredEvents.checkResult}</p>
               )}
             </div>
-            {/* 显示 GPT 生成的故事描述 */}
+            {/* 显示 AI 生成的故事描述 */}
             {occurredEvents.chatGPTResponse && (
               <div className="mt-4 p-4 bg-gray-100 rounded-lg">
                 <h3 className="font-semibold">生成的故事描述:</h3>

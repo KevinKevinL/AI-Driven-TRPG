@@ -50,3 +50,45 @@ Build: 0 Move: 8  Sanity 50
 - 极难射击(如在剧烈移动时)需要≤7才成功
 
 技能: 艺术/手艺(素描) 40%, 魅力 80%, 攀爬40%, 急救 35%, 聆听 50%, 劝服 50%, 心理学 40%, 巧妙手法 40%, 侦查 30%, 潜行 35%.这些技能的检定也是一样
+
+
+// ai/rag/loader.js
+
+const { PDFLoader } = require("@langchain/community/document_loaders/fs/pdf");
+const { RecursiveCharacterTextSplitter } = require("@langchain/textsplitters");
+
+// load docs
+const mechanismLoader = new PDFLoader("../../ai/rag/mechanism.pdf");
+const mechanism = await mechanismLoader.load();
+console.log(mechanism[0]);
+console.log(`Total characters: ${mechanism[0].pageContent.length}`);
+// split docs
+const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1000,
+    chunkOverlap: 200,
+});
+const mechanismChunks = await splitter.splitDocuments(mechanism);
+console.log(`Split blog post into ${allSplits.length} sub-documents.`);
+// store docs
+await vectorStore.addDocuments(allSplits);
+
+
+const { OpenAIEmbeddings } = require("@langchain/embeddings/openai");
+const { Chroma } = require("@langchain/vectorstores/chroma");
+const { RetrievalQAChain } = require("@langchain/chains");
+// 初始化嵌入模型
+const embeddings = new OpenAIEmbeddings({
+    openAIApiKey: process.env.OPENAI_API_KEY,
+});
+  
+// 创建向量存储
+const vectorStore = await Chroma.fromDocuments(
+    ...mechanismChunks,
+    embeddings
+);
+const retriever = vectorStore.asRetriever();
+const ragChain = RetrievalQAChain.fromLLM(llm, retriever);
+
+
+
+// loadMechanism().catch(console.error);
