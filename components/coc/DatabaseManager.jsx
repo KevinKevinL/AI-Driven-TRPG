@@ -625,6 +625,74 @@ const loadCharacterAttributes = async (characterId) => {
   }
 };
 
+const loadCharacterAllInfo = async (characterId) => {
+  try {
+    // 获取基础属性
+    const attributesQuery = `
+      SELECT * FROM Attributes 
+      WHERE character_id = ?
+    `;
+    const attributes = await executeQuery(attributesQuery, [characterId]);
+
+    // 获取派生属性
+    const derivedAttributesQuery = `
+      SELECT * FROM DerivedAttributes 
+      WHERE character_id = ?
+    `;
+    const derivedAttributes = await executeQuery(derivedAttributesQuery, [characterId]);
+
+    // 获取技能
+    const skillsQuery = `
+      SELECT * FROM Skills 
+      WHERE character_id = ?
+    `;
+    const skills = await executeQuery(skillsQuery, [characterId]);
+
+    // 获取角色基本信息
+    const characterQuery = `
+      SELECT name, gender, residence, birthplace, description 
+      FROM Characters 
+      WHERE id = ?
+    `;
+    const characterInfo = await executeQuery(characterQuery, [characterId]);
+
+    // 获取背景信息
+    const backgroundQuery = `
+      SELECT 
+        beliefs,
+        beliefs_details,
+        important_people,
+        important_people_details,
+        reasons,
+        reasons_details,
+        places,
+        places_details,
+        possessions,
+        possessions_details,
+        traits,
+        traits_details,
+        keylink,
+        keylink_details
+      FROM Backgrounds 
+      WHERE character_id = ?
+    `;
+    const background = await executeQuery(backgroundQuery, [characterId]);
+
+    return {
+      attributes: attributes[0] || null,
+      derivedAttributes: derivedAttributes[0] || null,
+      skills: skills[0] || null,
+      characterInfo: characterInfo[0] || null,
+      background: background[0] || null
+    };
+    
+  } catch (error) {
+    console.error('加载角色所有信息失败:', error);
+    throw new Error('加载角色所有信息失败');
+  }
+};
+
+
   // 组件加载时初始化
   useEffect(() => {
     const initialize = async () => {
@@ -661,6 +729,7 @@ const loadCharacterAttributes = async (characterId) => {
     getTableForTestRequired,
     getCharacterAttributeValue,
     loadCharacterAttributes,
+    loadCharacterAllInfo,
   };
 };
 
