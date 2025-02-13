@@ -1,0 +1,8 @@
+{
+  "testRequired": [
+    "dexterity"
+  ],
+  "hardLevel": 2,
+  "talkRequired": [],
+  "fightRequired": 0
+}

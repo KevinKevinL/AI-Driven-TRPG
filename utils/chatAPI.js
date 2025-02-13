@@ -18,6 +18,21 @@ export async function fetchChatGPTResponse(prompt) {
   }
 }
 
+
+/**
+ * 新增：调用 /api/story 接口生成故事描述
+ */
+export async function fetchStoryDescription(prompt) {
+  try {
+    const response = await axios.post("/api/story", { prompt });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching story description:", error);
+    throw error;
+  }
+}
+
+
 /**
  * 新增：调用 /api/characterDescription 接口生成角色描述
  */
