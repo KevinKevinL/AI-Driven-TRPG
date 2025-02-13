@@ -7,12 +7,12 @@ import ReactMarkdown from "react-markdown";
 export default function DialogueBox({ messages, setMessages }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [npcChats, setNpcChats] = useState({}); // 用于存储 NPC 的聊天窗口
+  const [npcChats, setNpcChats] = useState({}); // Store NPC chat windows
 
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    const userMessage = { sender: "玩家", text: input };
+    const userMessage = { sender: "Player", text: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
@@ -20,17 +20,17 @@ export default function DialogueBox({ messages, setMessages }) {
     try {
       const response = await axios.post("/api/chat", {
         input,
-        role: "KP", // 默认与 KP 聊天
+        role: "GM", // Default chat with GM
       });
 
       const replyText = typeof response.data.reply === "object"
         ? JSON.stringify(response.data.reply, null, 2)
         : response.data.reply;
 
-      const gptReply = { sender: "KP", text: replyText };
+      const gptReply = { sender: "GM", text: replyText };
       setMessages((prev) => [...prev, gptReply]);
 
-      // 如果需要与 NPC 对话，处理 talkRequired
+      // Handle NPC dialogue if required
       const replyData = typeof response.data.reply === "object" ? response.data.reply : {};
       if (replyData.talkRequired && Array.isArray(replyData.talkRequired)) {
         replyData.talkRequired.forEach((npcName) => {
@@ -44,7 +44,7 @@ export default function DialogueBox({ messages, setMessages }) {
       }
     } catch (error) {
       console.error("Error calling ChatGPT API:", error);
-      const errorMessage = { sender: "系统", text: "错误：无法连接到服务器。" };
+      const errorMessage = { sender: "System", text: "Error: Unable to connect to server." };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
@@ -54,7 +54,7 @@ export default function DialogueBox({ messages, setMessages }) {
   const handleNpcSend = async (npcName, npcInput) => {
     if (npcInput.trim() === "") return;
 
-    const npcMessage = { sender: "玩家", text: npcInput };
+    const npcMessage = { sender: "Player", text: npcInput };
     setNpcChats((prev) => ({
       ...prev,
       [npcName]: [...prev[npcName], npcMessage],
@@ -77,7 +77,7 @@ export default function DialogueBox({ messages, setMessages }) {
       }));
     } catch (error) {
       console.error("Error calling ChatGPT API:", error);
-      const errorMessage = { sender: "系统", text: "错误：无法连接到服务器。" };
+      const errorMessage = { sender: "System", text: "Error: Unable to connect to server." };
       setNpcChats((prev) => ({
         ...prev,
         [npcName]: [...prev[npcName], errorMessage],
@@ -94,18 +94,18 @@ export default function DialogueBox({ messages, setMessages }) {
 
   return (
     <div className="flex flex-col h-full rounded-lg">
-      {/* 消息显示区域 */}
+      {/* Message display area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 font-lovecraft">
         {messages.map((msg, index) => (
           <div
             key={index}
             className={`flex ${
-              msg.sender === "KP" ? "justify-start" : "justify-end"
+              msg.sender === "GM" ? "justify-start" : "justify-end"
             }`}
           >
             <div
               className={`p-3 rounded-xl max-w-[70%] shadow-lg ${
-                msg.sender === "KP"
+                msg.sender === "GM"
                   ? "bg-emerald-950/60 text-emerald-400 backdrop-blur-sm"
                   : "bg-emerald-900/60 text-emerald-300 backdrop-blur-sm"
               }`}
@@ -117,15 +117,15 @@ export default function DialogueBox({ messages, setMessages }) {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="text-emerald-500 text-sm">KP 正在输入...</div>
+            <div className="text-emerald-500 text-sm">GM is typing...</div>
           </div>
         )}
       </div>
 
-      {/* NPC 聊天窗口 */}
+      {/* NPC chat windows */}
       {Object.keys(npcChats).map((npcName) => (
         <div key={npcName} className="p-4 border-t border-emerald-900/30">
-          <h3 className="text-emerald-400">与 {npcName} 对话:</h3>
+          <h3 className="text-emerald-400">Conversation with {npcName}:</h3>
           <div className="space-y-2">
             {npcChats[npcName].map((msg, idx) => (
               <div
@@ -158,13 +158,13 @@ export default function DialogueBox({ messages, setMessages }) {
                 }
               }}
               className="flex-1 bg-emerald-900/20 border border-emerald-900/30 rounded-lg px-4 py-2 text-emerald-400 focus:outline-none"
-              placeholder={`对 ${npcName} 说点什么...`}
+              placeholder={`Say something to ${npcName}...`}
             />
           </div>
         </div>
       ))}
 
-      {/* 输入区域 */}
+      {/* Input area */}
       <div className="flex items-center p-4 border-t border-emerald-900/30 bg-black/40 backdrop-blur-sm rounded-b-lg">
         <input
           type="text"
@@ -172,7 +172,7 @@ export default function DialogueBox({ messages, setMessages }) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyPress}
           className="flex-1 bg-emerald-900/20 border border-emerald-900/30 rounded-lg px-4 py-2 text-emerald-400 focus:outline-none"
-          placeholder="输入内容..."
+          placeholder="Enter your message..."
         />
         <button
           onClick={handleSend}
@@ -184,7 +184,7 @@ export default function DialogueBox({ messages, setMessages }) {
                 : "bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/50"
             }`}
         >
-          发送
+          Send
         </button>
       </div>
     </div>

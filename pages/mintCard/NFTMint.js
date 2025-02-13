@@ -6,6 +6,7 @@ import { CONTRACT_ADDRESS } from '@/constants/networkConfig';
 import factoryArtifact from '@/artifacts/contracts/NFTCollectionFactory.sol/NFTCollectionFactory.json';
 import collectionArtifact from '@/artifacts/contracts/NFTCollectionFactory.sol/NFTCollection.json';
 
+
 const NFTInterface = dynamic(
   () => import('@/components/NFTInterface'),
   { ssr: false }

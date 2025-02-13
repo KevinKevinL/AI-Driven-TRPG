@@ -30,11 +30,12 @@ const NFTInterface = ({ factoryAddress, factoryABI, collectionABI }) => {
   const [uploading, setUploading] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState('');
   const [uploadedIPFSHash, setUploadedIPFSHash] = useState('');
+  const [selectedNFT, setSelectedNFT] = useState(null);
 
-  const [characterId, setCharacterId] = useState('');
   const [characterData, setCharacterData] = useState(null);
   const {
-    loadCharacterAllInfo
+    loadCharacterAllInfo,
+    currentCharacterId
   } = DatabaseManager();
   // Collection creation state
   const [newCollection, setNewCollection] = useState({
@@ -46,7 +47,7 @@ const NFTInterface = ({ factoryAddress, factoryABI, collectionABI }) => {
 
 
   const loadCharacterData = async () => {
-    if (!characterId.trim()) {
+    if (!currentCharacterId.trim()) {
       setError('Please enter a character ID');
       return false;
     }
@@ -54,7 +55,7 @@ const NFTInterface = ({ factoryAddress, factoryABI, collectionABI }) => {
     try {
       setLoading(true);
       setError('');
-      const data = await loadCharacterAllInfo(characterId);
+      const data = await loadCharacterAllInfo(currentCharacterId);
       
       if (!data || !data.characterInfo) {
         throw new Error('Character not found');
@@ -655,14 +656,6 @@ const NFTInterface = ({ factoryAddress, factoryABI, collectionABI }) => {
                 <div>
                   <label className="block text-sm font-medium text-emerald-400">Character ID</label>
                   <div className="mt-1 flex space-x-2">
-                    <input
-                      type="text"
-                      value={characterId}
-                      onChange={(e) => setCharacterId(e.target.value)}
-                      className="block w-full rounded-lg border-emerald-900/30 bg-[#0a0d11] text-emerald-400
-                               shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-                      placeholder="Enter character ID"
-                    />
                     <button
                       onClick={loadCharacterData}
                       disabled={loading}
@@ -800,11 +793,27 @@ const NFTInterface = ({ factoryAddress, factoryABI, collectionABI }) => {
                     key={nft.tokenId.toString()}
                     nft={nft}
                     contractAddress={selectedCollection}
+                    isSelected={selectedNFT?.tokenId === nft.tokenId}
+                    onSelect={() => setSelectedNFT(selectedNFT?.tokenId === nft.tokenId ? null : nft)}
                   />
                 ))}
               </div>
             ) : (
               <p className="text-emerald-400/60">No Character Cards found in this collection</p>
+            )}
+
+            {/* Confirm Investigator Button */}
+            {selectedNFT && (
+              <div className="mt-6 border-t border-emerald-900/30 pt-6">
+                <button
+                  onClick={() => window.location.href = 'http://localhost:3000/coc/introPage'}
+                  className="w-full px-6 py-3 bg-emerald-600/50 text-emerald-300 rounded-lg 
+                           hover:bg-emerald-500/50 transition-colors border border-emerald-600/30
+                           font-lovecraft tracking-wider text-lg shadow-lg shadow-emerald-900/30"
+                >
+                  Confirm Selected Investigator
+                </button>
+              </div>
             )}
           </div>
         )}

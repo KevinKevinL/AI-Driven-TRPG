@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // Modal Component
-const CharacterModal = ({ isOpen, onClose, metadata }) => {
+const CharacterModal = ({ isOpen, onClose, metadata, onSelect, isSelected }) => {
   if (!isOpen || !metadata) return null;
 
   const { characteristics, derived } = metadata.attributes;
@@ -80,22 +80,34 @@ const CharacterModal = ({ isOpen, onClose, metadata }) => {
           </div>
         )}
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="mt-6 w-full px-4 py-2 bg-emerald-900/50 text-emerald-400 rounded-lg 
-                   hover:bg-emerald-800/50 transition-colors border border-emerald-900/30
-                   font-lovecraft tracking-wide"
-        >
-          Close
-        </button>
+        {/* Action Buttons */}
+        <div className="mt-6 grid grid-cols-2 gap-4">
+          <button
+            onClick={() => onSelect?.()}
+            className={`px-4 py-2 rounded-lg font-lovecraft tracking-wide transition-colors
+                     ${isSelected 
+                       ? 'bg-emerald-600/50 text-emerald-300 border-emerald-600/50' 
+                       : 'bg-emerald-900/50 text-emerald-400 border-emerald-900/30 hover:bg-emerald-800/50'} 
+                     border`}
+          >
+            {isSelected ? 'Selected Investigator' : 'Select as Investigator'}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-emerald-900/50 text-emerald-400 rounded-lg 
+                     hover:bg-emerald-800/50 transition-colors border border-emerald-900/30
+                     font-lovecraft tracking-wide"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 // Card Component
-const NFTCard = ({ nft }) => {
+const NFTCard = ({ nft, isSelected, onSelect }) => {
   const [metadata, setMetadata] = useState(null);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -161,8 +173,9 @@ const NFTCard = ({ nft }) => {
   return (
     <>
       <div 
-        className="border border-emerald-900/30 rounded-lg overflow-hidden bg-[#0a0d11] shadow-lg
-                   hover:border-emerald-600/50 transition-all cursor-pointer"
+        className={`border border-emerald-900/30 rounded-lg overflow-hidden bg-[#0a0d11] shadow-lg
+                   hover:border-emerald-600/50 transition-all cursor-pointer
+                   ${isSelected ? 'ring-2 ring-emerald-500 shadow-emerald-500/50 shadow-lg' : ''}`}
         onClick={() => setIsModalOpen(true)}
       >
         {/* Preview Card Content */}
@@ -207,6 +220,8 @@ const NFTCard = ({ nft }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         metadata={metadata}
+        onSelect={onSelect}
+        isSelected={isSelected}
       />
     </>
   );

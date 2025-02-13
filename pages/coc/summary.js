@@ -197,19 +197,29 @@ ${JSON.stringify(completeCharacterData, null, 2)}
           </div>
 
           {description && (
-            <div className="mt-6 p-6 bg-slate-800/50 font-lovecraft border border-emerald-900/30 rounded-lg shadow-lg">
-              <h2 className="text-2xl font-bold text-emerald-500 mb-4">
-                人物描述
-              </h2>
-              <div className="text-emerald-400 whitespace-pre-line">
-                <ReactMarkdown>{description}</ReactMarkdown>
+            <>
+              <div className="mt-6 p-6 bg-slate-800/50 font-lovecraft border border-emerald-900/30 rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold text-emerald-500 mb-4">
+                  人物描述
+                </h2>
+                <div className="text-emerald-400 whitespace-pre-line">
+                  <ReactMarkdown>{description}</ReactMarkdown>
+                </div>
               </div>
-            </div>
+              
+              <div className="mt-8 text-center">
+                <Link
+                  href="/mintCard/NFTMint"
+                  className="inline-block px-8 py-4 bg-emerald-900/30 hover:bg-emerald-800/30 rounded-lg border border-emerald-900/30 transition-colors text-emerald-400 text-xl font-lovecraft shadow-lg hover:shadow-xl"
+                >
+                  前往铸造人物卡 →
+                </Link>
+              </div>
+            </>
           )}
         </div>
       </div>
     </>
   );
-};
-
+}
 export default SummaryPage;

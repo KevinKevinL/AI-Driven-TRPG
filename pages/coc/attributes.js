@@ -234,8 +234,8 @@ const AttributesGenerator = () => {
   return (
     <>
       <Head>
-        <title>COC - {profession.title}属性生成</title>
-        <meta name="description" content={`克苏鲁的呼唤 ${profession.title}属性生成`} />
+        <title>COC - {profession.title}Attributes</title>
+        <meta name="description" content={`Call Of Cthulhu ${profession.title}Attributes`} />
       </Head>
       
       <div className="min-h-screen bg-[#0a0d11] py-10">
@@ -246,7 +246,7 @@ const AttributesGenerator = () => {
             className="inline-block mb-6 text-emerald-400 hover:text-emerald-300 
                      transition-colors font-lovecraft tracking-wider"
           >
-            ← 返回职业选择
+            ← Return to profession selection
           </Link>
 
           {/* 职业信息 */}
@@ -255,12 +255,12 @@ const AttributesGenerator = () => {
                          tracking-wider drop-shadow-lg text-center">
               {profession.title}
               <span className="block text-2xl mt-2 text-emerald-400/80">
-                属性生成与技能分配
+                Attribute Generation and skill points allocation
               </span>
             </h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 text-emerald-400/80">
               <div>
-                <h3 className="text-lg font-lovecraft mb-2">职业技能：</h3>
+                <h3 className="text-lg font-lovecraft mb-2">Profession skills:</h3>
                 <ul className="list-disc list-inside space-y-1 font-numbers">
                   {profession.skills.map((skill, index) => (
                     <li key={index}>{skill}</li>
@@ -269,11 +269,11 @@ const AttributesGenerator = () => {
               </div>
               <div>
                 <div className="mb-4">
-                  <h3 className="text-lg font-lovecraft mb-2">信用评级：</h3>
+                  <h3 className="text-lg font-lovecraft mb-2">CreditRating:</h3>
                   <p className="font-numbers">{profession.creditRating}</p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-lovecraft mb-2">技能点数：</h3>
+                  <h3 className="text-lg font-lovecraft mb-2">SkillPoints:</h3>
                   <p className="font-numbers">{profession.skillPoints}</p>
                 </div>
               </div>
@@ -283,7 +283,7 @@ const AttributesGenerator = () => {
           {/* 年龄选择 */}
           <div className="mb-8 text-center">
              <div className="mb-6 relative">
-               <label className="mr-2 text-gray-300 font-lovecraft">年龄 (15-90):</label>
+               <label className="mr-2 text-gray-300 font-lovecraft">Age (15-90):</label>
                <input
                  type="text" // 改为 text 类型以支持更自由的输入
                  inputMode="numeric" // 在移动设备上显示数字键盘
@@ -299,7 +299,7 @@ const AttributesGenerator = () => {
                />
                {showAgeError && (
                  <div className="absolute w-full text-red-500 text-sm mt-1 font-lovecraft">
-                   年龄必须在15-90岁之间
+                   age must be between 15 and 90
                  </div>
                )}
              </div>
@@ -315,14 +315,14 @@ const AttributesGenerator = () => {
                        font-lovecraft tracking-wide"
             >
               <DiceAnimation isRolling={isRolling} />
-              {isRolling ? "正在探索未知..." : "重投命运骰"}
+              {isRolling ? "Explore the unknown..." : "Reroll Attributes"}
             </button>
           </div>
 
           {/* 属性显示 */}
           <div className={`transition-opacity duration-300 ${isRolling ? 'opacity-50' : 'opacity-100'}`}>
             <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4 text-emerald-400 font-lovecraft">基础属性</h2>
+              <h2 className="text-xl font-semibold mb-4 text-emerald-400 font-lovecraft">Basic attributes</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {attributeMapping.map(attr => (
                   <AttributeBox
@@ -336,7 +336,7 @@ const AttributesGenerator = () => {
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-4 text-emerald-400 font-lovecraft">派生属性</h2>
+              <h2 className="text-xl font-semibold mb-4 text-emerald-400 font-lovecraft">Derived attributes</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {derivedAttributes.map(attr => (
                   <AttributeBox
@@ -362,7 +362,7 @@ const AttributesGenerator = () => {
                    shadow-lg shadow-emerald-900/30
                    font-lovecraft tracking-wide"
         >
-          继续分配技能点 →
+           Go on to skill points allocation →
         </button>
       </div>
         </div>
