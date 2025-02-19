@@ -1,0 +1,12 @@
+{
+    "testRequired": [
+      "intelligence",
+      "investigate"
+    ],
+    "hardLevel": 2,
+    "talkRequired": [
+      "npc1",
+      "npc2"
+    ],
+    "fightRequired": 0
+  }
