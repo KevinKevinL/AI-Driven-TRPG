@@ -1,7 +1,7 @@
 {
     "testRequired": [
       "intelligence",
-      "investigate"
+      "Investigate"
     ],
     "hardLevel": 2,
     "talkRequired": [

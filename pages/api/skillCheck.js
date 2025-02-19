@@ -29,7 +29,7 @@ function checkSkill(player, skillName, hardLevel) {
 function checkDialogue(player, hardLevel, talkRequiredList) {
     if (talkRequiredList.length === 0) return "";
 
-    const persuadeSuccess = checkSkill(player, "persuade", hardLevel);
+    const persuadeSuccess = checkSkill(player, "Persuade", hardLevel);
     return (persuadeSuccess && player.hp > 0) ? talkRequiredList[0] : "";
 }
 
@@ -39,6 +39,9 @@ export function processSkillAndDialogueCheck(player, aiResponse) {
     const testRequiredList = aiResponse.testRequired || []; // 需要检定的技能
     const talkRequiredList = aiResponse.talkRequired || []; // 需要对话的 NPC
 
+    console.log("AI 解析技能检定请求:", aiResponse);
+    console.log("玩家数据:", player);
+
     // 进行技能检定
     const skillCheckResults = {};
     testRequiredList.forEach(skill => {
@@ -47,6 +50,9 @@ export function processSkillAndDialogueCheck(player, aiResponse) {
 
     // 进行对话检定
     const dialogueCheckResult = checkDialogue(player, hardLevel, talkRequiredList);
+    
+    console.log("技能检定结果:", skillCheckResults);
+    console.log("对话检定结果:", dialogueCheckResult);
 
     return {
         skillCheck: skillCheckResults,
